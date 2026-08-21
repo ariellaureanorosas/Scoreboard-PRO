@@ -42,7 +42,9 @@ const elements = {
   preMatchCrestB: document.getElementById('preMatchCrestB'),
   preMatchCompetitionLogo: document.getElementById('preMatchCompetitionLogo'),
   preMatchCompetitionName: document.getElementById('preMatchCompetitionName'),
-  preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle')
+  preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle'),
+  preMatchTeamNameA: document.getElementById('preMatchTeamNameA'),
+  preMatchTeamNameB: document.getElementById('preMatchTeamNameB')
 };
 
 function formatTime(seconds) {
@@ -147,6 +149,8 @@ function updatePreMatch(state) {
     elements.preMatchCompetitionLogo.style.display = state.preMatchLogo ? 'block' : 'none';
     elements.preMatchCompetitionName.textContent = state.competitionName || 'COCA-COLA LEAGUE';
     elements.preMatchCompetitionSubtitle.textContent = state.competitionSubtitle || '';
+    elements.preMatchTeamNameA.textContent = state.teamA.name || 'TIME A';
+    elements.preMatchTeamNameB.textContent = state.teamB.name || 'TIME B';
     elements.preMatch.classList.add('visible');
   } else {
     elements.preMatch.classList.remove('visible');

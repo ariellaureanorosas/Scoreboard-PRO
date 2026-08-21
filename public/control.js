@@ -60,6 +60,8 @@ const elements = {
   btnPreMatch: document.getElementById('btnPreMatch'),
   preMatchCompetitionName: document.getElementById('preMatchCompetitionName'),
   preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle'),
+  preMatchLogoInput: document.getElementById('preMatchLogoInput'),
+  preMatchLogoPreview: document.getElementById('preMatchLogoPreview'),
   
   // Status
   connectionStatus: document.getElementById('connectionStatus')
@@ -182,6 +184,11 @@ function updatePreMatch(state) {
   }
   elements.preMatchCompetitionName.value = state.competitionName || 'COCA-COLA LEAGUE';
   elements.preMatchCompetitionSubtitle.value = state.competitionSubtitle || '';
+  if (state.preMatchLogo) {
+    elements.preMatchLogoPreview.innerHTML = `<img src="${state.preMatchLogo}" alt="Logo Pré-Jogo">`;
+  } else {
+    elements.preMatchLogoPreview.innerHTML = '';
+  }
 }
 
 // ========================
@@ -306,6 +313,65 @@ function savePreMatch() {
   const name = elements.preMatchCompetitionName.value.trim();
   const subtitle = elements.preMatchCompetitionSubtitle.value.trim();
   socket.emit('preMatch:update', { name, subtitle });
+}
+
+/**
+ * Upload da logo do pré-jogo
+ */
+function uploadPreMatchLogo() {
+  const input = elements.preMatchLogoInput;
+  const file = input.files[0];
+  if (!file) return;
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.');
+    input.value = '';
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Arquivo muito grande. Tamanho máximo: 2MB.');
+    input.value = '';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('logo', file);
+
+  fetch('/api/upload-pre-match-logo', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      elements.preMatchLogoPreview.innerHTML = `<img src="${data.logo}" alt="Logo Pré-Jogo">`;
+    } else {
+      alert('Erro ao enviar logo: ' + (data.error || 'Erro desconhecido'));
+    }
+  })
+  .catch(err => {
+    alert('Erro ao enviar logo: ' + err.message);
+  });
+
+  input.value = '';
+}
+
+/**
+ * Remove a logo do pré-jogo
+ */
+function removePreMatchLogo() {
+  fetch('/api/pre-match-logo', { method: 'DELETE' })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        elements.preMatchLogoPreview.innerHTML = '';
+      }
+    })
+    .catch(err => {
+      alert('Erro ao remover logo: ' + err.message);
+    });
 }
 
 /**

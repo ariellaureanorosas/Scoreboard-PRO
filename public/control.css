@@ -875,3 +875,28 @@ body {
   border-color: #00cc66;
 }
 
+.pre-match-fields .logo-preview {
+  width: 80px;
+  height: 80px;
+  border: 2px dashed #0f3460;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+  overflow: hidden;
+  background: #1a1a2e;
+}
+
+.pre-match-fields .logo-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.pre-match-fields .logo-preview:empty::after {
+  content: 'Sem logo';
+  color: #666688;
+  font-size: 11px;
+}
+

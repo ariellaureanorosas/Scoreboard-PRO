@@ -143,8 +143,8 @@ function updatePreMatch(state) {
     elements.preMatchCrestA.style.display = state.teamA.logo ? 'block' : 'none';
     elements.preMatchCrestB.src = state.teamB.logo || '';
     elements.preMatchCrestB.style.display = state.teamB.logo ? 'block' : 'none';
-    elements.preMatchCompetitionLogo.src = state.competitionLogo || '';
-    elements.preMatchCompetitionLogo.style.display = state.competitionLogo ? 'block' : 'none';
+    elements.preMatchCompetitionLogo.src = state.preMatchLogo || '';
+    elements.preMatchCompetitionLogo.style.display = state.preMatchLogo ? 'block' : 'none';
     elements.preMatchCompetitionName.textContent = state.competitionName || 'COCA-COLA LEAGUE';
     elements.preMatchCompetitionSubtitle.textContent = state.competitionSubtitle || '';
     elements.preMatch.classList.add('visible');

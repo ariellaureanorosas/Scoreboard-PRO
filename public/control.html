@@ -159,6 +159,12 @@
           <button class="btn btn-toggle" id="btnPreMatch" onclick="togglePreMatch()">Mostrar Pré-Jogo</button>
           <div class="pre-match-fields" style="margin-top: 12px;">
             <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
+              Logo do Pré-Jogo:
+              <input type="file" id="preMatchLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadPreMatchLogo()" style="width: 100%; margin-top: 4px;">
+            </label>
+            <div class="logo-preview" id="preMatchLogoPreview"></div>
+            <button class="btn btn-remove-logo" onclick="removePreMatchLogo()" style="margin-top: 8px;">Remover Logo Pré-Jogo</button>
+            <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px; margin-top: 12px;">
               Nome da Competição:
               <input type="text" id="preMatchCompetitionName" value="COCA-COLA LEAGUE" maxlength="50" style="width: 100%; margin-top: 4px;">
             </label>

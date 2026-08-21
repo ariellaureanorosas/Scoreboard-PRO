@@ -31,7 +31,8 @@ const DEFAULT_STATE = {
   goalEvents: [],
   preMatchMode: false,
   competitionName: 'COCA-COLA LEAGUE',
-  competitionSubtitle: ''
+  competitionSubtitle: '',
+  preMatchLogo: null
 };
 
 // Carrega ou cria state.json
@@ -62,6 +63,7 @@ function loadState() {
         if (typeof parsed.preMatchMode !== 'boolean') parsed.preMatchMode = false;
         if (typeof parsed.competitionName !== 'string') parsed.competitionName = 'COCA-COLA LEAGUE';
         if (typeof parsed.competitionSubtitle !== 'string') parsed.competitionSubtitle = '';
+        if (typeof parsed.preMatchLogo !== 'string') parsed.preMatchLogo = null;
         return parsed;
       }
     }
@@ -256,14 +258,36 @@ app.post('/api/upload-competition-logo', upload.single('logo'), (req, res) => {
   res.json({ success: true, logo: logoPath });
 });
 
-// Remove logo da competição
-app.delete('/api/competition-logo', (req, res) => {
-  if (gameState.competitionLogo) {
-    const logoPath = path.join(__dirname, 'public', gameState.competitionLogo);
+// Upload logo do pré-jogo
+app.post('/api/upload-pre-match-logo', upload.single('logo'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+  }
+
+  const logoPath = `/assets/logos/${req.file.filename}`;
+
+  if (gameState.preMatchLogo) {
+    const oldPath = path.join(__dirname, 'public', gameState.preMatchLogo);
+    if (fs.existsSync(oldPath)) {
+      fs.unlinkSync(oldPath);
+    }
+  }
+
+  gameState.preMatchLogo = logoPath;
+  saveState();
+  io.emit('state:sync', gameState);
+
+  res.json({ success: true, logo: logoPath });
+});
+
+// Remove logo do pré-jogo
+app.delete('/api/pre-match-logo', (req, res) => {
+  if (gameState.preMatchLogo) {
+    const logoPath = path.join(__dirname, 'public', gameState.preMatchLogo);
     if (fs.existsSync(logoPath)) {
       fs.unlinkSync(logoPath);
     }
-    gameState.competitionLogo = null;
+    gameState.preMatchLogo = null;
     saveState();
     io.emit('state:sync', gameState);
   }

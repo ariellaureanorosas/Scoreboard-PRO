@@ -158,7 +158,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 8px;
   padding: 0 16px;
 }
 
@@ -171,14 +171,34 @@ html, body {
   letter-spacing: 1px;
   min-width: 36px;
   text-align: center;
+  line-height: 1;
+  padding-bottom: 2px;
 }
 
 .compact-chevron-right,
 .compact-chevron-left {
-  font-size: 22px;
-  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 30px;
   color: var(--chevron-color);
+  opacity: 0.2;
   line-height: 1;
+}
+
+.compact-chevron-right {
+    padding-left: 5px;
+}
+.compact-chevron-left {
+    padding-right: 5px;
+}
+
+.compact-chevron-right svg,
+.compact-chevron-left svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 
 .compact-goals {
@@ -189,12 +209,15 @@ html, body {
   min-width: 26px;
   text-align: center;
   line-height: 1;
+  padding-bottom: 2px;
 }
 
 .compact-sep {
-  font-size: 20px;
+  font-size: 23px;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.3);
+  color: rgba(255, 255, 255, 0.308);
+  line-height: 1;
+  padding-bottom: 2px;
 }
 
 .compact-goals.goal-scored {

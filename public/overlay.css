@@ -431,20 +431,16 @@ html, body {
   justify-content: center;
   gap: 12px;
   background: rgba(10, 22, 87, 0.85);
-  /* Padding simétrico: reserva espaço do label FALTAS nos dois lados,
-     mantendo o separador centralizado com o placar acima */
   padding: 6px 80px;
   margin-top: 6px;
   position: relative;
 }
 
-/* Animação de entrada das faltas (delay para entrar depois do placar) */
 @keyframes foulsSlideIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Animação de saída das faltas (imediata, antes do placar sair) */
 @keyframes foulsSlideOut {
   from { opacity: 1; transform: translateY(0); }
   to   { opacity: 0; transform: translateY(8px); }
@@ -458,7 +454,6 @@ html, body {
   animation: foulsSlideOut 0.2s ease both;
 }
 
-/* Label "FALTAS" à esquerda — fora do fluxo flex para não deslocar o separador */
 .expanded-fouls-label {
   position: absolute;
   left: 20px;
@@ -472,7 +467,6 @@ html, body {
   text-transform: uppercase;
 }
 
-/* Cada lado ocupa zona igual (alinhado com os nomes acima) */
 .expanded-fouls-side {
   flex: 1 1 0;
   display: flex;
@@ -481,17 +475,6 @@ html, body {
   gap: 50px;
 }
 
-.expanded-fouls-count {
-  font-family: var(--font-main);
-  font-size: 18px;
-  font-weight: 700;
-  color: var(--white);
-  min-width: 20px;
-  text-align: center;
-  line-height: 1;
-}
-
-/* Bolinhas: espalham para preencher o espaço disponível */
 .expanded-fouls-dots {
   flex: 1 1 0;
   display: flex;
@@ -528,3 +511,5 @@ html, body {
   background: rgba(255, 255, 255, 0.2);
   margin: 0 30px;
 }
+
+

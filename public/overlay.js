@@ -100,18 +100,12 @@ function updateCrests(state) {
 }
 
 function updateFoulsDisplay(team, fouls, directFouls) {
-  const countEl = document.getElementById(`foulsCount${team}`);
   const dotsContainer = document.getElementById(`foulsDots${team}`);
   const dlpEl = document.getElementById(`foulsDlp${team}`);
 
-  // Bolinhas: sempre visíveis, preenche até o máximo de 5
   const dots = dotsContainer.querySelectorAll('.foul-dot');
   dots.forEach((dot, i) => dot.classList.toggle('filled', i < fouls));
 
-  // Contador: faltas acumulativas
-  countEl.textContent = fouls;
-
-  // DLP: aparece a partir da 5ª falta e persiste após o reset do período
   const dlpCount = (directFouls || 0) + (fouls >= 5 ? fouls - 4 : 0);
   if (dlpCount > 0) {
     dlpEl.textContent = `DLP ${dlpCount}`;

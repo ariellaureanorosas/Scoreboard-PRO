@@ -341,6 +341,9 @@ io.on('connection', (socket) => {
           + (gameState[teamKey].fouls - 4);
       }
       gameState[teamKey].fouls = 0;
+    } else if (action === 'resetAll') {
+      gameState[teamKey].fouls = 0;
+      gameState[teamKey].directFouls = 0;
     }
 
     saveState();

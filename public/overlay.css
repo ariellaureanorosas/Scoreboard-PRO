@@ -462,7 +462,7 @@ html, body {
   font-family: var(--font-main);
   font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.45);
+  color: rgb(255, 255, 255);
   letter-spacing: 1px;
   text-transform: uppercase;
 }
@@ -519,7 +519,7 @@ html, body {
 .pre-match-overlay {
   position: fixed;
   inset: 0;
-  background: var(--main-bg-color);
+  background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -541,22 +541,26 @@ html, body {
   align-items: center;
   justify-content: center;
   gap: 80px;
-  width: 100%;
-  max-width: 1400px;
-  padding: 0 40px;
+  width: 1200px;
+  height: 650px;
+  padding: 40px 60px;
+  background: var(--main-bg-color);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
 }
 
 .pre-match-team {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 160px;
-  height: 160px;
+  gap: 20px;
+  width: 220px;
 }
 
 .pre-match-team img {
-  width: 100%;
-  height: 100%;
+  width: 200px;
+  height: 200px;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
@@ -565,19 +569,19 @@ html, body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
 }
 
 .pre-match-competition-logo {
-  width: 120px;
-  height: 120px;
+  width: 160px;
+  height: 160px;
   object-fit: contain;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
 }
 
 .pre-match-competition-name {
   font-family: var(--font-main);
-  font-size: 42px;
+  font-size: 52px;
   font-weight: 700;
   color: var(--white);
   text-transform: uppercase;
@@ -588,7 +592,7 @@ html, body {
 
 .pre-match-competition-subtitle {
   font-family: var(--font-main);
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.7);
   text-transform: uppercase;
@@ -597,26 +601,18 @@ html, body {
   line-height: 1;
 }
 
-.pre-match-team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 16px;
-  width: 160px;
-}
-
 .pre-match-team-name {
   font-family: var(--font-main);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   color: var(--white);
   text-transform: uppercase;
   letter-spacing: 1px;
   text-align: center;
   line-height: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
 }
 
 

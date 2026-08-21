@@ -379,8 +379,8 @@ function removePreMatchLogo() {
  */
 function resetFouls() {
   if (confirm('Tem certeza que deseja resetar as faltas?')) {
-    socket.emit('fouls:update', { team: 'A', action: 'reset' });
-    socket.emit('fouls:update', { team: 'B', action: 'reset' });
+    socket.emit('fouls:update', { team: 'A', action: 'resetAll' });
+    socket.emit('fouls:update', { team: 'B', action: 'resetAll' });
   }
 }
 

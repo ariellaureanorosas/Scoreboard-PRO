@@ -24,40 +24,33 @@
           <div class="team-controls">
             <h3 id="teamNameA">Time A</h3>
             <div class="score-display" id="scoreDisplayA">0</div>
-            <div class="button-group">
-              <button class="btn btn-goal" onclick="updateScore('A', 'increment')">+1 Gol</button>
-              <button class="btn btn-remove" onclick="updateScore('A', 'decrement')">-1 Gol</button>
-            </div>
-            <div class="goal-info-fields">
-              <input type="text" id="goalScorerA" placeholder="Artilheiro" maxlength="30">
-              <input type="text" id="goalMinuteA" placeholder="Min" maxlength="4" class="goal-minute-input">
-              <select id="goalTypeA">
-                <option value="">Normal</option>
-                <option value="P">Pênalti</option>
-                <option value="CG">Contra</option>
-              </select>
-            </div>
+              <div class="button-group">
+                <button class="btn btn-goal" onclick="updateScore('A', 'increment')">+1 Gol</button>
+              </div>
+              <div class="goal-info-fields">
+                <input type="text" id="goalScorerA" placeholder="Artilheiro" maxlength="30">
+              </div>
           </div>
           <div class="vs">VS</div>
           <div class="team-controls">
             <h3 id="teamNameB">Time B</h3>
             <div class="score-display" id="scoreDisplayB">0</div>
-            <div class="button-group">
-              <button class="btn btn-goal" onclick="updateScore('B', 'increment')">+1 Gol</button>
-              <button class="btn btn-remove" onclick="updateScore('B', 'decrement')">-1 Gol</button>
-            </div>
-            <div class="goal-info-fields">
-              <input type="text" id="goalScorerB" placeholder="Artilheiro" maxlength="30">
-              <input type="text" id="goalMinuteB" placeholder="Min" maxlength="4" class="goal-minute-input">
-              <select id="goalTypeB">
-                <option value="">Normal</option>
-                <option value="P">Pênalti</option>
-                <option value="CG">Contra</option>
-              </select>
-            </div>
+              <div class="button-group">
+                <button class="btn btn-goal" onclick="updateScore('B', 'increment')">+1 Gol</button>
+              </div>
+              <div class="goal-info-fields">
+                <input type="text" id="goalScorerB" placeholder="Artilheiro" maxlength="30">
+              </div>
           </div>
         </div>
         <button class="btn btn-reset" onclick="resetScore()">Resetar Placar</button>
+      </section>
+
+      <!-- EVENTOS -->
+      <section class="panel panel-events">
+        <h2>Eventos</h2>
+        <ul id="eventsList" class="events-list"></ul>
+        <p class="events-empty" id="eventsEmpty">Nenhum gol registrado.</p>
       </section>
 
       <!-- CRONÔMETRO -->
@@ -80,6 +73,7 @@
           <button class="btn btn-adjust" onclick="adjustTimer(10)">+10s</button>
           <button class="btn btn-adjust" onclick="adjustTimer(30)">+30s</button>
         </div>
+        <button class="btn btn-new-period" onclick="resetForNewPeriod()">Resetar Cronômetro e Faltas para Novo Período</button>
       </section>
 
       <!-- FALTAS -->
@@ -155,33 +149,6 @@
           <input type="file" id="competitionLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadCompetitionLogo()">
           <div class="logo-preview" id="competitionLogoPreview"></div>
           <button class="btn btn-remove-logo" onclick="removeCompetitionLogo()">Remover</button>
-        </div>
-        <div class="logo-size-config">
-          <label>
-            Tamanho do logo: <span id="compLogoSizeValue">80</span>%
-            <input type="range" id="compLogoSize" min="30" max="100" value="80" oninput="setCompetitionLogoSize(this.value)">
-          </label>
-        </div>
-      </section>
-
-      <!-- PERÍODO -->
-      <section class="panel panel-period">
-        <h2>Período</h2>
-        <div class="period-selector">
-          <button class="btn btn-period active" data-period="1º Tempo" onclick="setPeriod(this)">1º Tempo</button>
-          <button class="btn btn-period" data-period="2º Tempo" onclick="setPeriod(this)">2º Tempo</button>
-          <button class="btn btn-period" data-period="Prorrogação" onclick="setPeriod(this)">Prorrogação</button>
-          <button class="btn btn-period" data-period="Pênaltis" onclick="setPeriod(this)">Pênaltis</button>
-        </div>
-        <button class="btn btn-new-period" onclick="resetForNewPeriod()">Resetar Cronômetro e Faltas para Novo Período</button>
-      </section>
-
-      <!-- POSIÇÃO DO OVERLAY -->
-      <section class="panel panel-position">
-        <h2>Posição do Overlay</h2>
-        <div class="position-selector">
-          <button class="btn btn-position" id="btnPosTop" onclick="setPosition('top')">Superior Esquerda</button>
-          <button class="btn btn-position active" id="btnPosBottom" onclick="setPosition('bottom')">Inferior Esquerda</button>
         </div>
       </section>
 

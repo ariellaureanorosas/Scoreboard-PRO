@@ -43,12 +43,6 @@ const elements = {
   // Logo da competição
   competitionLogoInput: document.getElementById('competitionLogoInput'),
   competitionLogoPreview: document.getElementById('competitionLogoPreview'),
-  compLogoSize: document.getElementById('compLogoSize'),
-  compLogoSizeValue: document.getElementById('compLogoSizeValue'),
-  
-  // Posição
-  btnPosTop: document.getElementById('btnPosTop'),
-  btnPosBottom: document.getElementById('btnPosBottom'),
   
   // Modo Expandido
   btnExpandedMode: document.getElementById('btnExpandedMode'),
@@ -56,11 +50,11 @@ const elements = {
   
   // Info do Gol
   goalScorerA: document.getElementById('goalScorerA'),
-  goalMinuteA: document.getElementById('goalMinuteA'),
-  goalTypeA: document.getElementById('goalTypeA'),
   goalScorerB: document.getElementById('goalScorerB'),
-  goalMinuteB: document.getElementById('goalMinuteB'),
-  goalTypeB: document.getElementById('goalTypeB'),
+
+  // Eventos
+  eventsList: document.getElementById('eventsList'),
+  eventsEmpty: document.getElementById('eventsEmpty'),
   
   // Status
   connectionStatus: document.getElementById('connectionStatus')
@@ -130,23 +124,6 @@ function updateUI(state) {
   // Logo da competição
   updateCompetitionLogoPreview(state.competitionLogo);
   
-  // Período
-  document.querySelectorAll('.btn-period').forEach(btn => {
-    btn.classList.remove('active');
-    if (btn.dataset.period === state.period) {
-      btn.classList.add('active');
-    }
-  });
-  
-  // Posição do overlay
-  if (state.overlayPosition === 'top') {
-    elements.btnPosTop.classList.add('active');
-    elements.btnPosBottom.classList.remove('active');
-  } else {
-    elements.btnPosTop.classList.remove('active');
-    elements.btnPosBottom.classList.add('active');
-  }
-  
   // Modo expandido
   if (state.expandedMode) {
     elements.btnExpandedMode.textContent = 'Ocultar Expandido';
@@ -158,10 +135,6 @@ function updateUI(state) {
   
   // Auto-hide seconds
   elements.expandedAutoHideSeconds.value = state.expandedAutoHideSeconds || 10;
-  
-  // Tamanhos de logo
-  elements.compLogoSize.value = state.competitionLogoSize || 80;
-  elements.compLogoSizeValue.textContent = state.competitionLogoSize || 80;
 }
 
 /**
@@ -196,29 +169,51 @@ function updateCompetitionLogoPreview(logoPath) {
  * Atualiza o placar
  */
 function updateScore(team, action) {
-  socket.emit('score:update', { team, action });
-  
-  // Se for incremento de gol, enviar info do gol e ativar modo expandido
-  if (action === 'increment') {
-    const scorerInput = team === 'A' ? elements.goalScorerA : elements.goalScorerB;
-    const minuteInput = team === 'A' ? elements.goalMinuteA : elements.goalMinuteB;
-    const typeSelect = team === 'A' ? elements.goalTypeA : elements.goalTypeB;
-    
-    const scorer = scorerInput.value.trim();
-    const minute = minuteInput.value.trim();
-    const type = typeSelect.value;
-    
-    // Atualizar info do gol
-    socket.emit('goalInfo:update', { scorer, minute, type });
-    
-    // Ativar modo expandido temporariamente
-    socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
-    
-    // Limpar campos
-    scorerInput.value = '';
-    minuteInput.value = '';
-    typeSelect.value = '';
+  if (action !== 'increment') return;
+
+  const scorerInput = team === 'A' ? elements.goalScorerA : elements.goalScorerB;
+  const scorer = scorerInput.value.trim();
+
+  if (!scorer) {
+    alert('Digite o nome do artilheiro antes de marcar o gol.');
+    return;
   }
+
+  socket.emit('goalEvents:add', { team, name: scorer });
+  socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
+  scorerInput.value = '';
+}
+
+function renderEvents(state) {
+  const events = Array.isArray(state.goalEvents) ? [...state.goalEvents].reverse() : [];
+  elements.eventsList.innerHTML = '';
+  elements.eventsEmpty.style.display = events.length ? 'none' : 'block';
+
+  events.forEach(ev => {
+    const li = document.createElement('li');
+    li.className = 'event-item';
+
+    const teamState = ev.team === 'B' ? (currentState && currentState.teamB) : (currentState && currentState.teamA);
+    const tag = document.createElement('span');
+    tag.className = 'event-team team-' + (ev.team === 'B' ? 'b' : 'a');
+    tag.textContent = (teamState && teamState.abbreviation) || (ev.team === 'B' ? 'TIME B' : 'TIME A');
+    if (teamState && teamState.colorPrimary) tag.style.background = teamState.colorPrimary;
+
+    const name = document.createElement('span');
+    name.className = 'event-name';
+    name.textContent = ev.name.toUpperCase();
+
+    const btn = document.createElement('button');
+    btn.className = 'event-remove';
+    btn.textContent = '\u2715';
+    btn.title = 'Remover gol';
+    btn.onclick = () => socket.emit('goalEvents:remove', { id: ev.id });
+
+    li.appendChild(tag);
+    li.appendChild(name);
+    li.appendChild(btn);
+    elements.eventsList.appendChild(li);
+  });
 }
 
 /**
@@ -292,30 +287,6 @@ function toggleExpandedMode() {
 }
 
 /**
- * Define tamanho do logo da competição
- */
-function setCompetitionLogoSize(size) {
-  elements.compLogoSizeValue.textContent = size;
-  socket.emit('competitionLogo:size', { size: parseInt(size) });
-}
-
-/**
- * Define auto-hide seconds para modo expandido
- */
-function setExpandedAutoHideSeconds() {
-  const seconds = parseInt(elements.expandedAutoHideSeconds.value) || 10;
-  socket.emit('expandedMode:show', { autoHide: true, seconds });
-}
-
-/**
- * Define o período do jogo
- */
-function setPeriod(btn) {
-  const period = btn.dataset.period;
-  socket.emit('period:update', { period });
-}
-
-/**
  * Reseta cronômetro e faltas para novo período
  */
 function resetForNewPeriod() {
@@ -324,13 +295,6 @@ function resetForNewPeriod() {
     socket.emit('fouls:update', { team: 'A', action: 'reset' });
     socket.emit('fouls:update', { team: 'B', action: 'reset' });
   }
-}
-
-/**
- * Define a posição do overlay
- */
-function setPosition(position) {
-  socket.emit('position:update', { position });
 }
 
 /**
@@ -418,11 +382,11 @@ function uploadCompetitionLogo() {
 // EDITOR DE RECORTE DE IMAGEM
 // ========================
 
-// Dimensões reais de cada imagem no placar (overlay.css)
+// ATENÇÃO: 'competition' deve espelhar --badge-width e --bar-height do overlay.css
 const CROP_TARGETS = {
-  'competition': { w: 48, h: 58, shape: 'rect',   label: '48 × 58 px' },
-  'team:A':      { w: 55, h: 55, shape: 'circle', label: '55 × 55 px (círculo)' },
-  'team:B':      { w: 55, h: 55, shape: 'circle', label: '55 × 55 px (círculo)' }
+  'competition': { w: 48, h: 44, shape: 'rect',   label: '48 × 44 px' },
+  'team:A':      { w: 62, h: 62, shape: 'circle', label: '62 × 62 px (círculo)' },
+  'team:B':      { w: 62, h: 62, shape: 'circle', label: '62 × 62 px (círculo)' }
 };
 
 // Tamanho máximo do frame no modal (o maior lado)
@@ -709,7 +673,9 @@ socket.on('connect_error', (err) => {
 
 // Sincronizacao de estado
 socket.on('state:sync', (state) => {
+  currentState = state;
   updateUI(state);
+  renderEvents(state);
 });
 
 // Tick do cronômetro

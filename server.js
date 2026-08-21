@@ -23,14 +23,12 @@ const DEFAULT_STATE = {
   teamA: { name: 'Time A', abbreviation: 'TIM', logo: null, goals: 0, fouls: 0, directFouls: 0, colorPrimary: '#000000', colorSecondary: '#ffffff' },
   teamB: { name: 'Time B', abbreviation: 'TIM', logo: null, goals: 0, fouls: 0, directFouls: 0, colorPrimary: '#e51937', colorSecondary: '#000000' },
   timer: { duration: 1200, remaining: 1200, running: false, startedAt: null },
-  period: '1º Tempo',
-  overlayPosition: 'top',
   showSecondaryInfo: false,
   competitionLogo: null,
   expandedMode: false,
   expandedAutoHide: true,
   expandedAutoHideSeconds: 10,
-  lastGoal: { scorer: '', minute: '', type: '' }
+  goalEvents: []
 };
 
 // Carrega ou cria state.json
@@ -51,6 +49,12 @@ function loadState() {
             parsed.timer.running = false;
           }
         }
+        // Compatibilidade com state.json antigo (sem lista de eventos)
+        if (!Array.isArray(parsed.goalEvents)) parsed.goalEvents = [];
+        // Remove chaves obsoletas de versões anteriores
+        delete parsed.goalScorers;
+        delete parsed.period;
+        delete parsed.overlayPosition;
         return parsed;
       }
     }
@@ -273,12 +277,16 @@ io.on('connection', (socket) => {
   // ---- SCORE ----
   socket.on('score:update', (data) => {
     const { team, action } = data;
+    if (team !== 'A' && team !== 'B') return;
     const teamKey = team === 'A' ? 'teamA' : 'teamB';
 
     if (action === 'increment') {
       gameState[teamKey].goals++;
     } else if (action === 'decrement' && gameState[teamKey].goals > 0) {
       gameState[teamKey].goals--;
+    } else if (action === 'reset') {
+      gameState[teamKey].goals = 0;
+      gameState.goalEvents = gameState.goalEvents.filter(e => e.team !== team);
     }
 
     saveState();
@@ -364,17 +372,6 @@ io.on('connection', (socket) => {
   // ---- TIMER TICK (servidor calcula a cada 1s) ----
   // O tick é gerenciado por um intervalo global, não por socket
 
-  // ---- PERIOD ----
-  socket.on('period:update', (data) => {
-    const { period } = data;
-    const validPeriods = ['1º Tempo', '2º Tempo', 'Prorrogação', 'Pênaltis'];
-    if (validPeriods.includes(period)) {
-      gameState.period = period;
-      saveState();
-      io.emit('state:sync', gameState);
-    }
-  });
-
   // ---- TEAM INFO ----
   socket.on('team:update', (data) => {
     const { team, name } = data;
@@ -415,26 +412,6 @@ io.on('connection', (socket) => {
     io.emit('state:sync', gameState);
   });
 
-  // ---- COMPETITION LOGO SIZE ----
-  socket.on('competitionLogo:size', (data) => {
-    const { size } = data;
-    if (typeof size === 'number' && size >= 30 && size <= 100) {
-      gameState.competitionLogoSize = size;
-      saveState();
-      io.emit('state:sync', gameState);
-    }
-  });
-
-  // ---- OVERLAY POSITION ----
-  socket.on('position:update', (data) => {
-    const { position } = data;
-    if (position === 'top' || position === 'bottom') {
-      gameState.overlayPosition = position;
-      saveState();
-      io.emit('state:sync', gameState);
-    }
-  });
-
   // ---- SECONDARY INFO TOGGLE ----
   socket.on('secondaryInfo:toggle', () => {
     gameState.showSecondaryInfo = !gameState.showSecondaryInfo;
@@ -467,21 +444,33 @@ io.on('connection', (socket) => {
     io.emit('state:sync', gameState);
   });
 
-  // ---- LAST GOAL INFO ----
-  socket.on('goalInfo:update', (data) => {
-    const { scorer, minute, type } = data;
-    gameState.lastGoal = {
-      scorer: scorer || '',
-      minute: minute || '',
-      type: type || ''
-    };
+  // ---- EVENTOS DE GOL (cada gol é um evento; placar acompanha) ----
+  socket.on('goalEvents:add', (data) => {
+    const { team, name } = data;
+    if ((team !== 'A' && team !== 'B') || typeof name !== 'string') return;
+    const clean = name.trim().slice(0, 30);
+    if (!clean) return;
+    const id = gameState.goalEvents.reduce((max, e) => Math.max(max, e.id), 0) + 1;
+    gameState.goalEvents.push({ id, team, name: clean });
+    gameState[team === 'A' ? 'teamA' : 'teamB'].goals++;
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  socket.on('goalEvents:remove', (data) => {
+    const id = Number(data && data.id);
+    const idx = gameState.goalEvents.findIndex(e => e.id === id);
+    if (idx === -1) return;
+    const [removed] = gameState.goalEvents.splice(idx, 1);
+    const teamKey = removed.team === 'A' ? 'teamA' : 'teamB';
+    if (gameState[teamKey].goals > 0) gameState[teamKey].goals--;
     saveState();
     io.emit('state:sync', gameState);
   });
 
   // ---- FULL RESET ----
   socket.on('state:reset', () => {
-    gameState = { ...DEFAULT_STATE };
+    gameState = { ...DEFAULT_STATE, goalEvents: [] };
     // Remove logos
     const files = fs.readdirSync(LOGOS_DIR);
     files.forEach(file => {

@@ -28,7 +28,8 @@ const elements = {
   // Modo expandido
   expanded: document.getElementById('scoreboardExpanded'),
   expandedGoalInfo: document.getElementById('expandedGoalInfo'),
-  goalScorerText: document.getElementById('goalScorerText'),
+  scorersTextA: document.getElementById('scorersTextA'),
+  scorersTextB: document.getElementById('scorersTextB'),
   crestA: document.getElementById('crestA'),
   crestB: document.getElementById('crestB'),
   expandedNameA: document.getElementById('expandedNameA'),
@@ -43,13 +44,6 @@ function formatTime(seconds) {
   return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
 }
 
-function updatePosition(position) {
-  elements.compact.classList.remove('position-top', 'position-bottom');
-  elements.compact.classList.add(`position-${position}`);
-  elements.expanded.classList.remove('position-top', 'position-bottom');
-  elements.expanded.classList.add(`position-${position}`);
-}
-
 function updateCompetitionLogo(logoPath) {
   if (logoPath) {
     elements.competitionLogo.src = logoPath;
@@ -57,13 +51,6 @@ function updateCompetitionLogo(logoPath) {
   } else {
     elements.competitionLogo.style.display = 'none';
   }
-}
-
-function updateLogoSizes(state) {
-  const compSize = state.competitionLogoSize || 80;
-
-  elements.competitionLogo.style.maxWidth = `${compSize}%`;
-  elements.competitionLogo.style.maxHeight = `${compSize}%`;
 }
 
 function updateScore(team, goals) {
@@ -149,16 +136,20 @@ function updateColorBars(state) {
   elements.teamBColorBottom.style.background = state.teamB.colorSecondary || '#888888';
 }
 
-function updateGoalInfo(lastGoal) {
-  if (lastGoal && lastGoal.scorer) {
-    let text = lastGoal.scorer.toUpperCase();
-    if (lastGoal.minute) text += ` ${lastGoal.minute}'`;
-    if (lastGoal.type) text += ` (${lastGoal.type})`;
-    elements.goalScorerText.textContent = text;
-    elements.expandedGoalInfo.classList.remove('hidden');
-  } else {
-    elements.expandedGoalInfo.classList.add('hidden');
-  }
+function updateGoalScorers(state) {
+  const events = Array.isArray(state.goalEvents) ? state.goalEvents : [];
+  const agg = { A: new Map(), B: new Map() };
+  events.forEach(ev => {
+    if ((ev.team !== 'A' && ev.team !== 'B') || !ev.name) return;
+    const map = agg[ev.team];
+    map.set(ev.name, (map.get(ev.name) || 0) + 1);
+  });
+  const fmt = map => Array.from(map.entries())
+    .map(([name, n]) => n >= 2 ? `${name.toUpperCase()} - ${n}` : name.toUpperCase())
+    .join(', ');
+  elements.scorersTextA.textContent = fmt(agg.A);
+  elements.scorersTextB.textContent = fmt(agg.B);
+  elements.expandedGoalInfo.classList.toggle('hidden', events.length === 0);
 }
 
 function updateExpandedMode(state) {
@@ -188,11 +179,9 @@ function renderState(state) {
   updateFoulsDisplay('A', state.teamA.fouls, state.teamA.directFouls);
   updateFoulsDisplay('B', state.teamB.fouls, state.teamB.directFouls);
   updateCompetitionLogo(state.competitionLogo);
-  updateLogoSizes(state);
   updateTimer(state.timer.remaining);
-  updatePosition(state.overlayPosition);
   updateColorBars(state);
-  updateGoalInfo(state.lastGoal);
+  updateGoalScorers(state);
   updateExpandedMode(state);
 
   previousState = JSON.parse(JSON.stringify(state));

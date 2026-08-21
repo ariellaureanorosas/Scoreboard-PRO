@@ -4,3 +4,12 @@ public/assets/logos/
 node_modules/
 .env
 *.log
+
+# OpenCode temp files
+*.py
+.patch*.patch
+apply_patches.py
+debug_hunks.py
+split_patches.py
+split_patches_v2.py
+split_patches_v3.py

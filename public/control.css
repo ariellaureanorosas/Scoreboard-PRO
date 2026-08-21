@@ -900,3 +900,230 @@ body {
   font-size: 11px;
 }
 
+/* ==================== GERENCIAR TIMES ==================== */
+.teams-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 12px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.team-card {
+  background: #1e1e2e;
+  border: 1px solid #0f3460;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s, border-color 0.15s;
+}
+
+.team-card:hover {
+  transform: translateY(-2px);
+  border-color: #00cc66;
+}
+
+.team-card img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #2a2a2a;
+}
+
+.team-card-name {
+  font-weight: 700;
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.team-card-abbr {
+  font-size: 11px;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+.team-card-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.team-card-actions button {
+  padding: 4px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+}
+
+.team-card-actions .btn-edit {
+  background: #0f3460;
+}
+
+.team-card-actions .btn-edit:hover {
+  background: #1a4a7a;
+}
+
+.team-card-actions .btn-delete {
+  background: #c0392b;
+}
+
+.team-card-actions .btn-delete:hover {
+  background: #e74c3c;
+}
+
+/* Modal */
+.team-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+
+.team-modal.hidden {
+  display: none;
+}
+
+.team-modal-content {
+  background: #1e1e2e;
+  border-radius: 12px;
+  padding: 24px;
+  width: 520px;
+  max-width: 92vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  border: 1px solid #0f3460;
+}
+
+.team-modal-content h2 {
+  margin-bottom: 16px;
+  color: #00cc66;
+}
+
+.team-form-row {
+  margin-bottom: 12px;
+}
+
+.team-form-row label {
+  display: block;
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 4px;
+}
+
+.team-form-row input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 14px;
+}
+
+.team-form-row input[type="text"]:focus {
+  outline: none;
+  border-color: #00cc66;
+}
+
+.team-form-row input[type="file"] {
+  font-size: 12px;
+  color: #aaa;
+}
+
+.players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.player-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 60px auto;
+  gap: 8px;
+  align-items: center;
+  background: #16213e;
+  padding: 8px;
+  border-radius: 8px;
+}
+
+.player-row input {
+  padding: 6px;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 12px;
+  width: 100%;
+}
+
+.player-row input:focus {
+  outline: none;
+  border-color: #00cc66;
+}
+
+.player-row select {
+  padding: 6px;
+  border: 1px solid #0f3460;
+  border-radius: 4px;
+  background: #1a1a2e;
+  color: #fff;
+  font-size: 12px;
+  width: 100%;
+}
+
+.player-photo {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #2a2a2a;
+}
+
+.btn-remove-player {
+  background: #c0392b;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.btn-remove-player:hover {
+  background: #e74c3c;
+}
+
+.btn-add-player {
+  background: #333355;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+.btn-add-player:hover {
+  background: #444466;
+}
+
+.team-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+

@@ -176,6 +176,14 @@
         </div>
       </section>
 
+      <!-- GERENCIAR TIMES -->
+      <section class="panel panel-teams-db">
+        <h2>Gerenciar Times</h2>
+        <button class="btn btn-goal" onclick="openTeamModal()" style="margin-bottom: 16px;">+ Novo Time</button>
+        <div id="teamsList" class="teams-grid"></div>
+        <p id="teamsEmpty" class="events-empty" style="display:none;">Nenhum time cadastrado.</p>
+      </section>
+
       <!-- PLACAR EXPANDIDO -->
       <section class="panel panel-expanded">
         <h2>Placar Expandido</h2>
@@ -224,6 +232,39 @@
         <button class="btn btn-cancel" onclick="closeCropModal()">Cancelar</button>
         <button class="btn btn-confirm" onclick="confirmCrop()">Confirmar Recorte</button>
       </div>
+    </div>
+  </div>
+
+  <!-- MODAL DE CADASTRO/EDIÇÃO DE TIME -->
+  <div id="teamModal" class="team-modal hidden">
+    <div class="team-modal-content">
+      <h2 id="teamModalTitle">Novo Time</h2>
+      <form id="teamForm" onsubmit="saveTeam(event)">
+        <input type="hidden" id="teamId">
+        <div class="team-form-row">
+          <label>Nome do Time *</label>
+          <input type="text" id="teamName" required maxlength="50">
+        </div>
+        <div class="team-form-row">
+          <label>Sigla (3-4 letras)</label>
+          <input type="text" id="teamAbbr" maxlength="4" style="width: 80px; text-transform: uppercase;">
+        </div>
+        <div class="team-form-row">
+          <label>Escudo do Time</label>
+          <input type="file" id="teamLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadTeamLogo()">
+          <div class="logo-preview" id="teamLogoPreview"></div>
+          <input type="hidden" id="teamLogoData" value="">
+        </div>
+
+        <h3 style="margin-top: 20px; margin-bottom: 10px; color: #00cc66;">Escalação (5 jogadores)</h3>
+        <div id="playersList" class="players-list"></div>
+        <button type="button" class="btn-add-player" onclick="addPlayerRow()">+ Adicionar Jogador</button>
+
+        <div class="team-modal-actions">
+          <button type="button" class="btn btn-remove" onclick="closeTeamModal()">Cancelar</button>
+          <button type="submit" class="btn btn-goal">Salvar Time</button>
+        </div>
+      </form>
     </div>
   </div>
 

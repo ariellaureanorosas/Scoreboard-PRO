@@ -7,6 +7,14 @@
 
 const socket = io();
 
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
 // Referências dos elementos DOM
 const elements = {
   // Placar
@@ -62,6 +70,20 @@ const elements = {
   preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle'),
   preMatchLogoInput: document.getElementById('preMatchLogoInput'),
   preMatchLogoPreview: document.getElementById('preMatchLogoPreview'),
+
+  // Gerenciar Times
+  teamsList: document.getElementById('teamsList'),
+  teamsEmpty: document.getElementById('teamsEmpty'),
+  teamModal: document.getElementById('teamModal'),
+  teamModalTitle: document.getElementById('teamModalTitle'),
+  teamForm: document.getElementById('teamForm'),
+  teamId: document.getElementById('teamId'),
+  teamName: document.getElementById('teamName'),
+  teamAbbr: document.getElementById('teamAbbr'),
+  teamLogoInput: document.getElementById('teamLogoInput'),
+  teamLogoPreview: document.getElementById('teamLogoPreview'),
+  teamLogoData: document.getElementById('teamLogoData'),
+  playersList: document.getElementById('playersList'),
   
   // Status
   connectionStatus: document.getElementById('connectionStatus')
@@ -876,12 +898,348 @@ function savePreMatchDebounced() {
   preMatchTimeout = setTimeout(() => savePreMatch(), 300);
 }
 
+// ========================
+// GERENCIAR TIMES
+// ========================
+
+let currentTeamId = null;
+
+function loadTeams() {
+  fetch('/api/teams')
+    .then(res => res.json())
+    .then(teams => {
+      elements.teamsList.innerHTML = '';
+      if (!teams.length) {
+        elements.teamsEmpty.style.display = 'block';
+        return;
+      }
+      elements.teamsEmpty.style.display = 'none';
+
+      teams.forEach(team => {
+        const card = document.createElement('div');
+        card.className = 'team-card';
+
+        const img = document.createElement('img');
+        img.src = team.logo || 'https://via.placeholder.com/64?text=TIM';
+        img.alt = team.name;
+
+        const name = document.createElement('div');
+        name.className = 'team-card-name';
+        name.textContent = team.name;
+
+        const abbr = document.createElement('div');
+        abbr.className = 'team-card-abbr';
+        abbr.textContent = team.abbreviation;
+
+        const actions = document.createElement('div');
+        actions.className = 'team-card-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn-edit';
+        editBtn.textContent = 'Editar';
+        editBtn.onclick = (e) => { e.stopPropagation(); openTeamModal(team.id); };
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn-delete';
+        deleteBtn.textContent = 'Excluir';
+        deleteBtn.onclick = (e) => { e.stopPropagation(); deleteTeam(team.id); };
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        card.appendChild(img);
+        card.appendChild(name);
+        card.appendChild(abbr);
+        card.appendChild(actions);
+        elements.teamsList.appendChild(card);
+      });
+    });
+}
+
+function openTeamModal(teamId = null) {
+  currentTeamId = teamId;
+  elements.teamForm.reset();
+  elements.teamLogoPreview.innerHTML = '';
+  elements.teamLogoData.value = '';
+
+  if (teamId) {
+    elements.teamModalTitle.textContent = 'Editar Time';
+    fetch(`/api/teams/${teamId}`)
+      .then(res => res.json())
+      .then(team => {
+        elements.teamId.value = team.id;
+        elements.teamName.value = team.name;
+        elements.teamAbbr.value = team.abbreviation;
+        if (team.logo) {
+          elements.teamLogoPreview.innerHTML = `<img src="${team.logo}" alt="Escudo">`;
+          elements.teamLogoData.value = team.logo;
+        }
+        renderPlayers(team.players || []);
+      });
+  } else {
+    elements.teamModalTitle.textContent = 'Novo Time';
+    elements.teamId.value = '';
+    renderPlayers([{ id: uuidv4(), name: '', nickname: '', number: '', position: 'Goleiro', photo: null }]);
+  }
+
+  elements.teamModal.classList.remove('hidden');
+}
+
+function closeTeamModal() {
+  elements.teamModal.classList.add('hidden');
+  currentTeamId = null;
+}
+
+function renderPlayers(players) {
+  elements.playersList.innerHTML = '';
+  const positions = ['Goleiro', 'Fixo', 'Ala', 'Ala', 'Pivô'];
+
+  players.forEach((player, index) => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+
+    const photo = document.createElement('img');
+    photo.className = 'player-photo';
+    photo.src = player.photo || 'https://via.placeholder.com/36?text=?';
+    photo.alt = 'Foto';
+
+    const nameInput = document.createElement('input');
+    nameInput.type = 'text';
+    nameInput.placeholder = 'Nome completo';
+    nameInput.value = player.name || '';
+
+    const nicknameInput = document.createElement('input');
+    nicknameInput.type = 'text';
+    nicknameInput.placeholder = 'Apelido';
+    nicknameInput.value = player.nickname || '';
+
+    const numberInput = document.createElement('input');
+    numberInput.type = 'text';
+    numberInput.placeholder = 'Nº';
+    numberInput.value = player.number || '';
+    numberInput.style.width = '50px';
+
+    const posSelect = document.createElement('select');
+    positions.forEach(pos => {
+      const opt = document.createElement('option');
+      opt.value = pos;
+      opt.textContent = pos;
+      if (player.position === pos) opt.selected = true;
+      posSelect.appendChild(opt);
+    });
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'btn-remove-player';
+    removeBtn.textContent = '✕';
+    removeBtn.onclick = () => row.remove();
+
+    row.appendChild(photo);
+    row.appendChild(nameInput);
+    row.appendChild(nicknameInput);
+    row.appendChild(numberInput);
+    row.appendChild(posSelect);
+    row.appendChild(removeBtn);
+    elements.playersList.appendChild(row);
+  });
+}
+
+function addPlayerRow() {
+  const row = document.createElement('div');
+  row.className = 'player-row';
+
+  const photo = document.createElement('img');
+  photo.className = 'player-photo';
+  photo.src = 'https://via.placeholder.com/36?text=?';
+  photo.alt = 'Foto';
+
+  const nameInput = document.createElement('input');
+  nameInput.type = 'text';
+  nameInput.placeholder = 'Nome completo';
+
+  const nicknameInput = document.createElement('input');
+  nicknameInput.type = 'text';
+  nicknameInput.placeholder = 'Apelido';
+
+  const numberInput = document.createElement('input');
+  numberInput.type = 'text';
+  numberInput.placeholder = 'Nº';
+  numberInput.style.width = '50px';
+
+  const posSelect = document.createElement('select');
+  ['Goleiro', 'Fixo', 'Ala', 'Ala', 'Pivô'].forEach(pos => {
+    const opt = document.createElement('option');
+    opt.value = pos;
+    opt.textContent = pos;
+    posSelect.appendChild(opt);
+  });
+
+  const removeBtn = document.createElement('button');
+  removeBtn.type = 'button';
+  removeBtn.className = 'btn-remove-player';
+  removeBtn.textContent = '✕';
+  removeBtn.onclick = () => row.remove();
+
+  row.appendChild(photo);
+  row.appendChild(nameInput);
+  row.appendChild(nicknameInput);
+  row.appendChild(numberInput);
+  row.appendChild(posSelect);
+  row.appendChild(removeBtn);
+  elements.playersList.appendChild(row);
+}
+
+function uploadTeamLogo() {
+  const input = elements.teamLogoInput;
+  const file = input.files[0];
+  if (!file) return;
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.');
+    input.value = '';
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Arquivo muito grande. Tamanho máximo: 2MB.');
+    input.value = '';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('logo', file);
+
+  const teamId = elements.teamId.value || 'new';
+  fetch(`/api/teams/${teamId}/logo`, {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      elements.teamLogoPreview.innerHTML = `<img src="${data.logo}" alt="Escudo">`;
+      elements.teamLogoData.value = data.logo;
+    } else {
+      alert('Erro ao enviar logo: ' + (data.error || 'Erro desconhecido'));
+    }
+  })
+  .catch(err => {
+    alert('Erro ao enviar logo: ' + err.message);
+  });
+
+  input.value = '';
+}
+
+function saveTeam(event) {
+  event.preventDefault();
+
+  const name = elements.teamName.value.trim();
+  if (!name) {
+    alert('Nome do time é obrigatório.');
+    return;
+  }
+
+  const abbreviation = elements.teamAbbr.value.trim().toUpperCase();
+  const logo = elements.teamLogoData.value;
+
+  const playerRows = elements.playersList.querySelectorAll('.player-row');
+  const players = [];
+  playerRows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const select = row.querySelector('select');
+    const playerName = inputs[0].value.trim();
+    if (!playerName) return;
+
+    players.push({
+      id: uuidv4(),
+      name: playerName,
+      nickname: inputs[1].value.trim(),
+      number: inputs[2].value.trim(),
+      position: select.value,
+      photo: null
+    });
+  });
+
+  const payload = { name, abbreviation, players };
+
+  if (currentTeamId) {
+    fetch(`/api/teams/${currentTeamId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(() => {
+      closeTeamModal();
+      loadTeams();
+    })
+    .catch(err => alert('Erro ao salvar time: ' + err.message));
+  } else {
+    fetch('/api/teams', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(team => {
+      // Upload logo se houver
+      const logoInput = elements.teamLogoInput;
+      if (logoInput.files[0]) {
+        const formData = new FormData();
+        formData.append('logo', logoInput.files[0]);
+        fetch(`/api/teams/${team.id}/logo`, {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            elements.teamLogoData.value = data.logo;
+            saveTeamLogoReference(team.id, data.logo);
+          }
+        });
+      }
+      closeTeamModal();
+      loadTeams();
+    })
+    .catch(err => alert('Erro ao criar time: ' + err.message));
+  }
+}
+
+function saveTeamLogoReference(teamId, logoPath) {
+  fetch(`/api/teams/${teamId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ logo: logoPath })
+  }).catch(err => console.error('Erro ao salvar logo:', err));
+}
+
+function deleteTeam(teamId) {
+  if (!confirm('Tem certeza que deseja excluir este time? Esta ação não pode ser desfeita.')) return;
+
+  fetch(`/api/teams/${teamId}`, { method: 'DELETE' })
+    .then(res => res.json())
+    .then(() => loadTeams())
+    .catch(err => alert('Erro ao excluir time: ' + err.message));
+}
+
+// Pré-jogo: salvar nome e subtítulo com debounce
+let preMatchTimeout = null;
+
+function savePreMatchDebounced() {
+  clearTimeout(preMatchTimeout);
+  preMatchTimeout = setTimeout(() => savePreMatch(), 300);
+}
+
 elements.preMatchCompetitionName.addEventListener('input', savePreMatchDebounced);
 elements.preMatchCompetitionSubtitle.addEventListener('input', savePreMatchDebounced);
 
 // ========================
 // INICIALIZAÇÃO
 // ========================
+
+loadTeams();
 
 // Busca estado inicial via HTTP como fallback
 fetch('/api/state')

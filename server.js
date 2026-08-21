@@ -16,7 +16,9 @@ const io = new Server(server, {
 
 const PORT = 3000;
 const STATE_FILE = path.join(__dirname, 'state.json');
+const TEAMS_DB_FILE = path.join(__dirname, 'teams-database.json');
 const LOGOS_DIR = path.join(__dirname, 'public', 'assets', 'logos');
+const PLAYERS_DIR = path.join(__dirname, 'public', 'assets', 'players');
 
 // Estado padrão do jogo
 const DEFAULT_STATE = {
@@ -82,9 +84,36 @@ function saveState() {
   }
 }
 
-// Garante que a pasta de logos existe
-if (!fs.existsSync(LOGOS_DIR)) {
-  fs.mkdirSync(LOGOS_DIR, { recursive: true });
+// ========================
+// BANCO DE TIMES
+// ========================
+
+function loadTeamsDB() {
+  try {
+    if (fs.existsSync(TEAMS_DB_FILE)) {
+      const data = fs.readFileSync(TEAMS_DB_FILE, 'utf8');
+      const parsed = JSON.parse(data);
+      if (Array.isArray(parsed.teams)) return parsed;
+    }
+  } catch (err) {
+    console.error('Erro ao ler teams-database.json, criando novo:', err.message);
+  }
+  return { teams: [] };
+}
+
+function saveTeamsDB(db) {
+  try {
+    fs.writeFileSync(TEAMS_DB_FILE, JSON.stringify(db, null, 2));
+  } catch (err) {
+    console.error('Erro ao salvar teams-database.json:', err.message);
+  }
+}
+
+let teamsDB = loadTeamsDB();
+
+// Garante que a pasta de players existe
+if (!fs.existsSync(PLAYERS_DIR)) {
+  fs.mkdirSync(PLAYERS_DIR, { recursive: true });
 }
 
 // Configuração do Multer para upload de logos
@@ -292,6 +321,156 @@ app.delete('/api/pre-match-logo', (req, res) => {
     io.emit('state:sync', gameState);
   }
 
+  res.json({ success: true });
+});
+
+// ========================
+// API — BANCO DE TIMES
+// ========================
+
+// Listar todos os times
+app.get('/api/teams', (req, res) => {
+  res.json(teamsDB.teams || []);
+});
+
+// Obter um time por ID
+app.get('/api/teams/:id', (req, res) => {
+  const team = teamsDB.teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: 'Time não encontrado' });
+  res.json(team);
+});
+
+// Criar time
+app.post('/api/teams', express.json({ limit: '10mb' }), (req, res) => {
+  const { name, abbreviation, players } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Nome do time é obrigatório' });
+  }
+
+  const team = {
+    id: uuidv4(),
+    name: name.trim(),
+    abbreviation: (abbreviation || '').trim().slice(0, 4).toUpperCase() || 'TIM',
+    logo: null,
+    players: Array.isArray(players) ? players : []
+  };
+
+  teamsDB.teams.push(team);
+  saveTeamsDB(teamsDB);
+  res.json(team);
+});
+
+// Atualizar time
+app.put('/api/teams/:id', express.json({ limit: '10mb' }), (req, res) => {
+  const idx = teamsDB.teams.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Time não encontrado' });
+
+  const { name, abbreviation, players } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Nome do time é obrigatório' });
+  }
+
+  teamsDB.teams[idx] = {
+    ...teamsDB.teams[idx],
+    name: name.trim(),
+    abbreviation: (abbreviation || '').trim().slice(0, 4).toUpperCase() || 'TIM',
+    players: Array.isArray(players) ? players : teamsDB.teams[idx].players
+  };
+
+  saveTeamsDB(teamsDB);
+  res.json(teamsDB.teams[idx]);
+});
+
+// Excluir time
+app.delete('/api/teams/:id', (req, res) => {
+  const idx = teamsDB.teams.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Time não encontrado' });
+
+  // Remove arquivos de logo e fotos dos jogadores
+  const team = teamsDB.teams[idx];
+  if (team.logo) {
+    const logoPath = path.join(__dirname, 'public', team.logo);
+    if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
+  }
+  if (Array.isArray(team.players)) {
+    team.players.forEach(p => {
+      if (p.photo) {
+        const photoPath = path.join(__dirname, 'public', p.photo);
+        if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
+      }
+    });
+  }
+
+  teamsDB.teams.splice(idx, 1);
+  saveTeamsDB(teamsDB);
+  res.json({ success: true });
+});
+
+// Upload logo do time
+app.post('/api/teams/:id/logo', upload.single('logo'), (req, res) => {
+  const team = teamsDB.teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: 'Time não encontrado' });
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+
+  const logoPath = `/assets/logos/${req.file.filename}`;
+
+  // Remove logo anterior se existir
+  if (team.logo) {
+    const oldPath = path.join(__dirname, 'public', team.logo);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+  }
+
+  team.logo = logoPath;
+  saveTeamsDB(teamsDB);
+  res.json({ success: true, logo: logoPath });
+});
+
+// Remove logo do time
+app.delete('/api/teams/:id/logo', (req, res) => {
+  const team = teamsDB.teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: 'Time não encontrado' });
+  if (!team.logo) return res.json({ success: true });
+
+  const logoPath = path.join(__dirname, 'public', team.logo);
+  if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
+  team.logo = null;
+  saveTeamsDB(teamsDB);
+  res.json({ success: true });
+});
+
+// Upload foto de jogador
+app.post('/api/teams/:id/players/:playerId/photo', upload.single('photo'), (req, res) => {
+  const team = teamsDB.teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: 'Time não encontrado' });
+  const player = team.players.find(p => p.id === req.params.playerId);
+  if (!player) return res.status(404).json({ error: 'Jogador não encontrado' });
+  if (!req.file) return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+
+  const photoPath = `/assets/players/${req.file.filename}`;
+
+  // Remove foto anterior se existir
+  if (player.photo) {
+    const oldPath = path.join(__dirname, 'public', player.photo);
+    if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+  }
+
+  player.photo = photoPath;
+  saveTeamsDB(teamsDB);
+  res.json({ success: true, photo: photoPath });
+});
+
+// Remove foto de jogador
+app.delete('/api/teams/:id/players/:playerId/photo', (req, res) => {
+  const team = teamsDB.teams.find(t => t.id === req.params.id);
+  if (!team) return res.status(404).json({ error: 'Time não encontrado' });
+  const player = team.players.find(p => p.id === req.params.playerId);
+  if (!player) return res.status(404).json({ error: 'Jogador não encontrado' });
+  if (!player.photo) return res.json({ success: true });
+
+  const photoPath = path.join(__dirname, 'public', player.photo);
+  if (fs.existsSync(photoPath)) fs.unlinkSync(photoPath);
+  player.photo = null;
+  saveTeamsDB(teamsDB);
   res.json({ success: true });
 });
 

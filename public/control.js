@@ -901,6 +901,8 @@ function savePreMatchDebounced() {
 // ========================
 
 let currentTeamId = null;
+let pendingLogoFile = null;
+let pendingPlayerPhotos = new Map();
 
 function loadTeams() {
   fetch('/api/teams')
@@ -956,6 +958,8 @@ function loadTeams() {
 
 function openTeamModal(teamId = null) {
   currentTeamId = teamId;
+  pendingLogoFile = null;
+  pendingPlayerPhotos.clear();
   elements.teamForm.reset();
   elements.teamLogoPreview.innerHTML = '';
   elements.teamLogoData.value = '';
@@ -995,11 +999,21 @@ function renderPlayers(players) {
   players.forEach((player, index) => {
     const row = document.createElement('div');
     row.className = 'player-row';
+    row.dataset.playerId = player.id || '';
+
+    const photoInput = document.createElement('input');
+    photoInput.type = 'file';
+    photoInput.accept = '.png,.jpg,.jpeg,.svg';
+    photoInput.style.display = 'none';
+    photoInput.onchange = () => triggerPlayerPhotoUpload(player.id || uuidv4(), photoInput);
 
     const photo = document.createElement('img');
     photo.className = 'player-photo';
     photo.src = player.photo || 'https://via.placeholder.com/36?text=?';
     photo.alt = 'Foto';
+    photo.style.cursor = 'pointer';
+    photo.title = 'Clique para alterar a foto';
+    photo.onclick = () => photoInput.click();
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
@@ -1032,6 +1046,7 @@ function renderPlayers(players) {
     removeBtn.textContent = '✕';
     removeBtn.onclick = () => row.remove();
 
+    row.appendChild(photoInput);
     row.appendChild(photo);
     row.appendChild(nameInput);
     row.appendChild(nicknameInput);
@@ -1046,10 +1061,21 @@ function addPlayerRow() {
   const row = document.createElement('div');
   row.className = 'player-row';
 
+  const playerId = uuidv4();
+
+  const photoInput = document.createElement('input');
+  photoInput.type = 'file';
+  photoInput.accept = '.png,.jpg,.jpeg,.svg';
+  photoInput.style.display = 'none';
+  photoInput.onchange = () => triggerPlayerPhotoUpload(playerId, photoInput);
+
   const photo = document.createElement('img');
   photo.className = 'player-photo';
   photo.src = 'https://via.placeholder.com/36?text=?';
   photo.alt = 'Foto';
+  photo.style.cursor = 'pointer';
+  photo.title = 'Clique para alterar a foto';
+  photo.onclick = () => photoInput.click();
 
   const nameInput = document.createElement('input');
   nameInput.type = 'text';
@@ -1078,6 +1104,7 @@ function addPlayerRow() {
   removeBtn.textContent = '✕';
   removeBtn.onclick = () => row.remove();
 
+  row.appendChild(photoInput);
   row.appendChild(photo);
   row.appendChild(nameInput);
   row.appendChild(nicknameInput);
@@ -1105,27 +1132,12 @@ function uploadTeamLogo() {
     return;
   }
 
-  const formData = new FormData();
-  formData.append('logo', file);
-
-  const teamId = elements.teamId.value || 'new';
-  fetch(`/api/teams/${teamId}/logo`, {
-    method: 'POST',
-    body: formData
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      elements.teamLogoPreview.innerHTML = `<img src="${data.logo}" alt="Escudo">`;
-      elements.teamLogoData.value = data.logo;
-    } else {
-      alert('Erro ao enviar logo: ' + (data.error || 'Erro desconhecido'));
-    }
-  })
-  .catch(err => {
-    alert('Erro ao enviar logo: ' + err.message);
-  });
-
+  pendingLogoFile = file;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    elements.teamLogoPreview.innerHTML = `<img src="${e.target.result}" alt="Escudo">`;
+  };
+  reader.readAsDataURL(file);
   input.value = '';
 }
 
@@ -1149,8 +1161,9 @@ function saveTeam(event) {
     const playerName = inputs[0].value.trim();
     if (!playerName) return;
 
+    const existingId = row.dataset.playerId;
     players.push({
-      id: uuidv4(),
+      id: existingId || uuidv4(),
       name: playerName,
       nickname: inputs[1].value.trim(),
       number: inputs[2].value.trim(),
@@ -1161,6 +1174,40 @@ function saveTeam(event) {
 
   const payload = { name, abbreviation, players };
 
+  function doUploads(teamId) {
+    const promises = [];
+
+    if (pendingLogoFile) {
+      const formData = new FormData();
+      formData.append('logo', pendingLogoFile);
+      promises.push(
+        fetch(`/api/teams/${teamId}/logo`, { method: 'POST', body: formData })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              elements.teamLogoData.value = data.logo;
+              return fetch(`/api/teams/${teamId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ logo: data.logo })
+              });
+            }
+          })
+      );
+    }
+
+    pendingPlayerPhotos.forEach((file, playerId) => {
+      const formData = new FormData();
+      formData.append('photo', file);
+      promises.push(
+        fetch(`/api/teams/${teamId}/players/${playerId}/photo`, { method: 'POST', body: formData })
+          .then(res => res.json())
+      );
+    });
+
+    return Promise.all(promises);
+  }
+
   if (currentTeamId) {
     fetch(`/api/teams/${currentTeamId}`, {
       method: 'PUT',
@@ -1168,6 +1215,7 @@ function saveTeam(event) {
       body: JSON.stringify(payload)
     })
     .then(res => res.json())
+    .then(() => doUploads(currentTeamId))
     .then(() => {
       closeTeamModal();
       loadTeams();
@@ -1180,24 +1228,8 @@ function saveTeam(event) {
       body: JSON.stringify(payload)
     })
     .then(res => res.json())
-    .then(team => {
-      // Upload logo se houver
-      const logoInput = elements.teamLogoInput;
-      if (logoInput.files[0]) {
-        const formData = new FormData();
-        formData.append('logo', logoInput.files[0]);
-        fetch(`/api/teams/${team.id}/logo`, {
-          method: 'POST',
-          body: formData
-        })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success) {
-            elements.teamLogoData.value = data.logo;
-            saveTeamLogoReference(team.id, data.logo);
-          }
-        });
-      }
+    .then(team => doUploads(team.id))
+    .then(() => {
       closeTeamModal();
       loadTeams();
     })
@@ -1220,6 +1252,34 @@ function deleteTeam(teamId) {
     .then(res => res.json())
     .then(() => loadTeams())
     .catch(err => alert('Erro ao excluir time: ' + err.message));
+}
+
+function triggerPlayerPhotoUpload(playerId, input) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.');
+    input.value = '';
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Arquivo muito grande. Tamanho máximo: 2MB.');
+    input.value = '';
+    return;
+  }
+
+  pendingPlayerPhotos.set(playerId, file);
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const row = input.closest('.player-row');
+    const img = row.querySelector('.player-photo');
+    if (img) img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
 }
 
 // Pré-jogo: salvar nome e subtítulo com debounce

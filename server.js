@@ -370,11 +370,19 @@ app.put('/api/teams/:id', express.json({ limit: '10mb' }), (req, res) => {
     return res.status(400).json({ error: 'Nome do time é obrigatório' });
   }
 
+  const mergedPlayers = (Array.isArray(players) ? players : []).map(newPlayer => {
+    const oldPlayer = teamsDB.teams[idx].players.find(p => p.id === newPlayer.id);
+    return {
+      ...newPlayer,
+      photo: oldPlayer ? oldPlayer.photo : null
+    };
+  });
+
   teamsDB.teams[idx] = {
     ...teamsDB.teams[idx],
     name: name.trim(),
     abbreviation: (abbreviation || '').trim().slice(0, 4).toUpperCase() || 'TIM',
-    players: Array.isArray(players) ? players : teamsDB.teams[idx].players
+    players: mergedPlayers
   };
 
   saveTeamsDB(teamsDB);

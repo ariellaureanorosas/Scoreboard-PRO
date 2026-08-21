@@ -1,26 +1,6 @@
-# Dependências
-node_modules/
-
-# Estado do jogo (gerado automaticamente pelo servidor)
+# Runtime / dados voláteis
 state.json
-
-# Logos enviados pelos usuários (upload dinâmico)
 public/assets/logos/
-
-# Variáveis de ambiente e segredos
+node_modules/
 .env
-.env.local
-
-# Logs
 *.log
-npm-debug.log*
-
-# Arquivos do sistema operacional
-.DS_Store
-Thumbs.db
-desktop.ini
-
-# Editor / IDE
-.vscode/
-.idea/
-*.swp

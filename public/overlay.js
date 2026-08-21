@@ -35,7 +35,14 @@ const elements = {
   expandedNameA: document.getElementById('expandedNameA'),
   expandedNameB: document.getElementById('expandedNameB'),
   expandedScoreA: document.getElementById('expandedScoreA'),
-  expandedScoreB: document.getElementById('expandedScoreB')
+  expandedScoreB: document.getElementById('expandedScoreB'),
+  // Modo pré-jogo
+  preMatch: document.getElementById('preMatchOverlay'),
+  preMatchCrestA: document.getElementById('preMatchCrestA'),
+  preMatchCrestB: document.getElementById('preMatchCrestB'),
+  preMatchCompetitionLogo: document.getElementById('preMatchCompetitionLogo'),
+  preMatchCompetitionName: document.getElementById('preMatchCompetitionName'),
+  preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle')
 };
 
 function formatTime(seconds) {
@@ -130,6 +137,22 @@ function updateColorBars(state) {
   elements.teamBColorBottom.style.background = state.teamB.colorSecondary || '#888888';
 }
 
+function updatePreMatch(state) {
+  if (state.preMatchMode) {
+    elements.preMatchCrestA.src = state.teamA.logo || '';
+    elements.preMatchCrestA.style.display = state.teamA.logo ? 'block' : 'none';
+    elements.preMatchCrestB.src = state.teamB.logo || '';
+    elements.preMatchCrestB.style.display = state.teamB.logo ? 'block' : 'none';
+    elements.preMatchCompetitionLogo.src = state.competitionLogo || '';
+    elements.preMatchCompetitionLogo.style.display = state.competitionLogo ? 'block' : 'none';
+    elements.preMatchCompetitionName.textContent = state.competitionName || 'COCA-COLA LEAGUE';
+    elements.preMatchCompetitionSubtitle.textContent = state.competitionSubtitle || '';
+    elements.preMatch.classList.add('visible');
+  } else {
+    elements.preMatch.classList.remove('visible');
+  }
+}
+
 function updateGoalScorers(state) {
   const events = Array.isArray(state.goalEvents) ? state.goalEvents : [];
   const agg = { A: new Map(), B: new Map() };
@@ -176,7 +199,13 @@ function renderState(state) {
   updateTimer(state.timer.remaining);
   updateColorBars(state);
   updateGoalScorers(state);
+  updatePreMatch(state);
   updateExpandedMode(state);
+
+  if (state.preMatchMode) {
+    elements.compact.classList.remove('visible');
+    elements.expanded.classList.remove('visible');
+  }
 
   previousState = JSON.parse(JSON.stringify(state));
 }

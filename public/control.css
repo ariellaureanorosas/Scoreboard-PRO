@@ -841,3 +841,37 @@ body {
   text-align: center;
   margin: 8px 0 0;
 }
+
+/* ==================== PRÉ-JOGO ==================== */
+.panel-pre-match {
+  margin-top: 15px;
+}
+
+.pre-match-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pre-match-fields label {
+  display: block;
+  font-size: 12px;
+  color: #aaa;
+  margin-bottom: 6px;
+}
+
+.pre-match-fields input {
+  width: 100%;
+  padding: 8px;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  background: #1a1a2e;
+  color: #ffffff;
+  font-size: 14px;
+}
+
+.pre-match-fields input:focus {
+  outline: none;
+  border-color: #00cc66;
+}
+

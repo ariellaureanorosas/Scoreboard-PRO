@@ -28,7 +28,10 @@ const DEFAULT_STATE = {
   expandedMode: false,
   expandedAutoHide: true,
   expandedAutoHideSeconds: 10,
-  goalEvents: []
+  goalEvents: [],
+  preMatchMode: false,
+  competitionName: 'COCA-COLA LEAGUE',
+  competitionSubtitle: ''
 };
 
 // Carrega ou cria state.json
@@ -55,6 +58,10 @@ function loadState() {
         delete parsed.goalScorers;
         delete parsed.period;
         delete parsed.overlayPosition;
+        // Compatibilidade com state.json antigo (sem campos de pré-jogo)
+        if (typeof parsed.preMatchMode !== 'boolean') parsed.preMatchMode = false;
+        if (typeof parsed.competitionName !== 'string') parsed.competitionName = 'COCA-COLA LEAGUE';
+        if (typeof parsed.competitionSubtitle !== 'string') parsed.competitionSubtitle = '';
         return parsed;
       }
     }
@@ -440,6 +447,21 @@ io.on('connection', (socket) => {
   // ---- EXPANDED MODE HIDE ----
   socket.on('expandedMode:hide', () => {
     gameState.expandedMode = false;
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  // ---- PRE-MATCH MODE ----
+  socket.on('preMatch:toggle', () => {
+    gameState.preMatchMode = !gameState.preMatchMode;
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  socket.on('preMatch:update', (data) => {
+    const { name, subtitle } = data;
+    if (typeof name === 'string') gameState.competitionName = name.trim();
+    if (typeof subtitle === 'string') gameState.competitionSubtitle = subtitle.trim();
     saveState();
     io.emit('state:sync', gameState);
   });

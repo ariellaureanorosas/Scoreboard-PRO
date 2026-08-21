@@ -55,6 +55,11 @@ const elements = {
   // Eventos
   eventsList: document.getElementById('eventsList'),
   eventsEmpty: document.getElementById('eventsEmpty'),
+
+  // Pré-Jogo
+  btnPreMatch: document.getElementById('btnPreMatch'),
+  preMatchCompetitionName: document.getElementById('preMatchCompetitionName'),
+  preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle'),
   
   // Status
   connectionStatus: document.getElementById('connectionStatus')
@@ -133,6 +138,9 @@ function updateUI(state) {
     elements.btnExpandedMode.classList.remove('active');
   }
   
+  // Pré-Jogo
+  updatePreMatch(state);
+  
   // Auto-hide seconds
   elements.expandedAutoHideSeconds.value = state.expandedAutoHideSeconds || 10;
 }
@@ -159,6 +167,21 @@ function updateCompetitionLogoPreview(logoPath) {
   } else {
     elements.competitionLogoPreview.innerHTML = '';
   }
+}
+
+/**
+ * Atualiza o estado do modo pré-jogo na UI
+ */
+function updatePreMatch(state) {
+  if (state.preMatchMode) {
+    elements.btnPreMatch.textContent = 'Ocultar Pré-Jogo';
+    elements.btnPreMatch.classList.add('active');
+  } else {
+    elements.btnPreMatch.textContent = 'Mostrar Pré-Jogo';
+    elements.btnPreMatch.classList.remove('active');
+  }
+  elements.preMatchCompetitionName.value = state.competitionName || 'COCA-COLA LEAGUE';
+  elements.preMatchCompetitionSubtitle.value = state.competitionSubtitle || '';
 }
 
 // ========================
@@ -267,6 +290,22 @@ function resetScore() {
     socket.emit('score:update', { team: 'A', action: 'reset' });
     socket.emit('score:update', { team: 'B', action: 'reset' });
   }
+}
+
+/**
+ * Alterna modo pré-jogo no overlay
+ */
+function togglePreMatch() {
+  socket.emit('preMatch:toggle');
+}
+
+/**
+ * Salva dados do pré-jogo (nome da competição e subtítulo)
+ */
+function savePreMatch() {
+  const name = elements.preMatchCompetitionName.value.trim();
+  const subtitle = elements.preMatchCompetitionSubtitle.value.trim();
+  socket.emit('preMatch:update', { name, subtitle });
 }
 
 /**
@@ -676,6 +715,7 @@ socket.on('state:sync', (state) => {
   currentState = state;
   updateUI(state);
   renderEvents(state);
+  updatePreMatch(state);
 });
 
 // Tick do cronômetro
@@ -761,6 +801,17 @@ elements.teamColorPrimaryB.addEventListener('input', () => {
 elements.teamColorSecondaryB.addEventListener('input', () => {
   socket.emit('team:colors', { team: 'B', colorPrimary: elements.teamColorPrimaryB.value, colorSecondary: elements.teamColorSecondaryB.value });
 });
+
+// Pré-jogo: salvar nome e subtítulo com debounce
+let preMatchTimeout = null;
+
+function savePreMatchDebounced() {
+  clearTimeout(preMatchTimeout);
+  preMatchTimeout = setTimeout(() => savePreMatch(), 300);
+}
+
+elements.preMatchCompetitionName.addEventListener('input', savePreMatchDebounced);
+elements.preMatchCompetitionSubtitle.addEventListener('input', savePreMatchDebounced);
 
 // ========================
 // INICIALIZAÇÃO

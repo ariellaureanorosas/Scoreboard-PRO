@@ -1254,6 +1254,44 @@ function deleteTeam(teamId) {
     .catch(err => alert('Erro ao excluir time: ' + err.message));
 }
 
+function populateTeamSelects() {
+  fetch('/api/teams')
+    .then(res => res.json())
+    .then(teams => {
+      ['A', 'B'].forEach(side => {
+        const select = document.getElementById(`teamSelect${side}`);
+        if (!select) return;
+        select.innerHTML = '<option value="">-- Selecionar time --</option>';
+        teams.forEach(team => {
+          const opt = document.createElement('option');
+          opt.value = team.id;
+          opt.textContent = `${team.name} (${team.abbreviation})`;
+          select.appendChild(opt);
+        });
+      });
+    });
+}
+
+function loadTeamFromDB(side, teamId) {
+  if (!teamId) return;
+  fetch(`/api/teams/${teamId}`)
+    .then(res => res.json())
+    .then(team => {
+      document.getElementById(`teamNameInput${side}`).value = team.name;
+      document.getElementById(`teamAbbrInput${side}`).value = team.abbreviation;
+      document.getElementById(`teamColorPrimary${side}`).value = team.colorPrimary || '#000000';
+      document.getElementById(`teamColorSecondary${side}`).value = team.colorSecondary || '#000000';
+
+      const preview = document.getElementById(`logoPreview${side}`);
+      if (team.logo) {
+        preview.innerHTML = `<img src="${team.logo}" alt="Escudo">`;
+      } else {
+        preview.innerHTML = '';
+      }
+    })
+    .catch(err => alert('Erro ao carregar time: ' + err.message));
+}
+
 function triggerPlayerPhotoUpload(playerId, input) {
   const file = input.files[0];
   if (!file) return;
@@ -1296,6 +1334,7 @@ elements.preMatchCompetitionSubtitle.addEventListener('input', savePreMatchDebou
 // ========================
 
 loadTeams();
+populateTeamSelects();
 
 // Busca estado inicial via HTTP como fallback
 fetch('/api/state')

@@ -104,26 +104,32 @@
       <section class="panel panel-teams">
         <h2>Times</h2>
         <div class="teams-config">
-          <div class="team-config">
-            <h3>Time A</h3>
-            <input type="text" id="teamNameInputA" placeholder="Nome do Time A" maxlength="20">
-            <input type="text" id="teamAbbrInputA" placeholder="Sigla (ex: RMA)" maxlength="4" class="abbr-input">
-            <div class="color-picker">
-              <label>Cor Primária:</label>
-              <input type="color" id="teamColorPrimaryA" value="#000000">
-              <label>Cor Secundária:</label>
-              <input type="color" id="teamColorSecondaryA" value="#ffffff">
-            </div>
-            <div class="logo-upload">
-              <label for="logoInputA" class="btn btn-upload">Escolher Escudo</label>
-              <input type="file" id="logoInputA" accept=".png,.jpg,.jpeg,.svg" onchange="uploadLogo('A')">
-              <div class="logo-preview" id="logoPreviewA"></div>
-              <button class="btn btn-remove-logo" onclick="removeLogo('A')">Remover</button>
-            </div>
+        <div class="team-config">
+          <h3>Time A</h3>
+          <select id="teamSelectA" onchange="loadTeamFromDB('A', this.value)" style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a2e; color: #fff; border: 2px solid #0f3460; border-radius: 6px;">
+            <option value="">-- Selecionar time --</option>
+          </select>
+          <input type="text" id="teamNameInputA" placeholder="Nome do Time A" maxlength="20">
+          <input type="text" id="teamAbbrInputA" placeholder="Sigla (ex: RMA)" maxlength="4" class="abbr-input">
+          <div class="color-picker">
+            <label>Cor Primária:</label>
+            <input type="color" id="teamColorPrimaryA" value="#000000">
+            <label>Cor Secundária:</label>
+            <input type="color" id="teamColorSecondaryA" value="#ffffff">
           </div>
-          <div class="team-config">
-            <h3>Time B</h3>
-            <input type="text" id="teamNameInputB" placeholder="Nome do Time B" maxlength="20">
+          <div class="logo-upload">
+            <label for="logoInputA" class="btn btn-upload">Escolher Escudo</label>
+            <input type="file" id="logoInputA" accept=".png,.jpg,.jpeg,.svg" onchange="uploadLogo('A')">
+            <div class="logo-preview" id="logoPreviewA"></div>
+            <button class="btn btn-remove-logo" onclick="removeLogo('A')">Remover</button>
+          </div>
+        </div>
+        <div class="team-config">
+          <h3>Time B</h3>
+          <select id="teamSelectB" onchange="loadTeamFromDB('B', this.value)" style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a2e; color: #fff; border: 2px solid #0f3460; border-radius: 6px;">
+            <option value="">-- Selecionar time --</option>
+          </select>
+          <input type="text" id="teamNameInputB" placeholder="Nome do Time B" maxlength="20">
             <input type="text" id="teamAbbrInputB" placeholder="Sigla (ex: STU)" maxlength="4" class="abbr-input">
             <div class="color-picker">
               <label>Cor Primária:</label>

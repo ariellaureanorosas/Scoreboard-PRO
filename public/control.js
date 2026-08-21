@@ -891,8 +891,6 @@ elements.teamColorSecondaryB.addEventListener('input', () => {
 });
 
 // Pré-jogo: salvar nome e subtítulo com debounce
-let preMatchTimeout = null;
-
 function savePreMatchDebounced() {
   clearTimeout(preMatchTimeout);
   preMatchTimeout = setTimeout(() => savePreMatch(), 300);
@@ -1225,8 +1223,6 @@ function deleteTeam(teamId) {
 }
 
 // Pré-jogo: salvar nome e subtítulo com debounce
-let preMatchTimeout = null;
-
 function savePreMatchDebounced() {
   clearTimeout(preMatchTimeout);
   preMatchTimeout = setTimeout(() => savePreMatch(), 300);

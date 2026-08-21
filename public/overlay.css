@@ -1,0 +1,496 @@
+/* ============================================
+   OVERLAY FUTSAL — ESTILO CHAMPIONS LEAGUE
+   ============================================
+   VARIÁVEIS CSS
+   ============================================ */
+
+:root {
+  --main-bg-color: #0a1657;
+  --badge-bg: #e8edf5;
+  --chevron-color: #5dc9f1;
+  --white: #FFFFFF;
+  --color-fallback: #888888;
+
+  --font-main: 'Barlow Condensed', 'Oswald', 'Impact', sans-serif;
+
+  --bar-height: 58px;
+  --badge-width: 48px;
+  --clock-width: 108px;
+  --respiro-width: 5px;
+  --color-bar-width: 11px;
+
+  --pos-top: 40px;
+  --pos-left: 40px;
+}
+
+/* ============================================
+   RESET
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 1920px;
+  height: 1080px;
+  background: transparent;
+  overflow: hidden;
+  font-family: var(--font-main);
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ============================================
+   SCOREBOARD (container fixo)
+   ============================================ */
+
+.scoreboard {
+  position: fixed;
+  z-index: 1000;
+  /* Estado oculto animável (sem display:none) */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+}
+
+.scoreboard.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+/* Slide da esquerda ao entrar */
+.scoreboard.position-top {
+  top: var(--pos-top);
+  left: var(--pos-left);
+  transform: translateX(-40px);
+}
+
+.scoreboard.visible.position-top {
+  transform: translateX(0);
+}
+
+.scoreboard.position-bottom {
+  bottom: var(--pos-top);
+  left: var(--pos-left);
+  transform: translateX(-40px);
+}
+
+.scoreboard.visible.position-bottom {
+  transform: translateX(0);
+}
+
+/* ============================================
+   BARRA COMPACTA — 6 segmentos colados
+   [Badge] [Clock] [respiro] [CorA] [Placar] [CorB]
+   ============================================ */
+
+.compact-bar {
+  display: flex;
+  align-items: stretch;
+  height: var(--bar-height);
+}
+
+.compact-segment {
+  flex-shrink: 0;
+}
+
+/* --- Segmento 1: Badge da competição --- */
+.compact-badge {
+  width: var(--badge-width);
+  background: var(--badge-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compact-badge img {
+  max-width: 80%;
+  max-height: 80%;
+  object-fit: contain;
+}
+
+/* --- Segmento 2: Cronômetro --- */
+.compact-clock {
+  width: var(--clock-width);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.compact-clock span {
+  font-family: var(--font-main);
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--main-bg-color);
+  letter-spacing: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.compact-clock span.zero {
+  animation: timerBlink 0.6s ease-in-out infinite;
+}
+
+@keyframes timerBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+
+/* --- Segmento 4: Trave de cor do Time A --- */
+.compact-team-a-color-bar {
+  width: var(--color-bar-width);
+  display: flex;
+  flex-direction: column;
+}
+
+.compact-team-a-color-top,
+.compact-team-a-color-bottom {
+  flex: 1;
+  background: var(--color-fallback);
+}
+
+/* --- Segmento 5: Bloco principal do placar --- */
+.compact-score-block {
+  background: var(--main-bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 0 16px;
+}
+
+.compact-abbr {
+  font-family: var(--font-main);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  min-width: 36px;
+  text-align: center;
+}
+
+.compact-chevron-right,
+.compact-chevron-left {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--chevron-color);
+  line-height: 1;
+}
+
+.compact-goals {
+  font-family: var(--font-main);
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--white);
+  min-width: 26px;
+  text-align: center;
+  line-height: 1;
+}
+
+.compact-sep {
+  font-size: 20px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.compact-goals.goal-scored {
+  animation: goalFlash 1.2s ease-out;
+}
+
+@keyframes goalFlash {
+  0% { transform: scale(1); }
+  20% { transform: scale(1.5); color: var(--chevron-color); }
+  40% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* --- Segmento 6: Trave de cor do Time B --- */
+.compact-team-b-color-bar {
+  width: var(--color-bar-width);
+  display: flex;
+  flex-direction: column;
+}
+
+.compact-team-b-color-top,
+.compact-team-b-color-bottom {
+  flex: 1;
+  background: var(--color-fallback);
+}
+
+/* ============================================
+   RESPONSIVIDADE
+   ============================================ */
+
+@media (max-width: 1920px) {
+  html, body {
+    width: 100vw;
+    height: 100vh;
+  }
+}
+
+/* ============================================
+   MODO EXPANDIDO
+   ============================================ */
+
+.scoreboard-expanded {
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  width: 800px;
+  left: 50%;
+  /* Estado oculto animável — slide de baixo (preserva centralização) */
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateX(-50%) translateY(20px);
+  transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+  bottom: 40px;
+}
+
+.scoreboard-expanded.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Linha 1: Info do gol */
+.expanded-goal-info {
+  background: rgba(10, 22, 87, 0.9);
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 16px;
+}
+
+.expanded-goal-info.hidden {
+  display: none;
+}
+
+.expanded-goal-info span {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Divisor decorativo */
+.expanded-divider {
+  height: 3px;
+  background: linear-gradient(90deg, #ff6b9d, #c44dff, #00d4ff);
+}
+
+/* Linha 2: Placar principal */
+.expanded-main {
+  background: linear-gradient(180deg, #0f1d6b 0%, var(--main-bg-color) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 65px;
+  /* Padding reserva espaço dos escudos pendurados nas pontas */
+  padding: 0 60px;
+  position: relative;
+}
+
+.expanded-crest {
+  width: 55px;
+  height: 55px;
+  border-radius: 50%;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-shrink: 0;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.expanded-crest-a {
+  left: -10px;
+}
+
+.expanded-crest-b {
+  right: -10px;
+}
+
+.expanded-crest img {
+  max-width: 85%;
+  max-height: 85%;
+  object-fit: contain;
+}
+
+.expanded-team-name {
+  font-family: var(--font-main);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  /* Zonas de largura igual — nenhum nome ocupa mais espaço que o outro */
+  flex: 1 1 0;
+  min-width: 0;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1;
+  z-index: 1;
+}
+
+.expanded-score-center {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.expanded-goals {
+  font-family: var(--font-main);
+  font-size: 42px;
+  font-weight: 700;
+  color: var(--white);
+  min-width: 35px;
+  text-align: center;
+  line-height: 1;
+}
+
+.expanded-goals.goal-scored {
+  animation: goalFlash 1.2s ease-out;
+}
+
+.expanded-bracket {
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--chevron-color);
+  line-height: 1;
+}
+
+.expanded-sep {
+  font-size: 24px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.3);
+  line-height: 1;
+}
+
+/* Linha 3: Faltas */
+.expanded-fouls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(10, 22, 87, 0.85);
+  /* Padding simétrico: reserva espaço do label FALTAS nos dois lados,
+     mantendo o separador centralizado com o placar acima */
+  padding: 6px 80px;
+  margin-top: 6px;
+  position: relative;
+}
+
+/* Animação de entrada das faltas (delay para entrar depois do placar) */
+@keyframes foulsSlideIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Animação de saída das faltas (imediata, antes do placar sair) */
+@keyframes foulsSlideOut {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+.scoreboard-expanded.visible .expanded-fouls {
+  animation: foulsSlideIn 0.25s ease 0.15s both;
+}
+
+.scoreboard-expanded:not(.visible) .expanded-fouls {
+  animation: foulsSlideOut 0.2s ease both;
+}
+
+/* Label "FALTAS" à esquerda — fora do fluxo flex para não deslocar o separador */
+.expanded-fouls-label {
+  position: absolute;
+  left: 20px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-main);
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.45);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+/* Cada lado ocupa zona igual (alinhado com os nomes acima) */
+.expanded-fouls-side {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 50px;
+}
+
+.expanded-fouls-count {
+  font-family: var(--font-main);
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--white);
+  min-width: 20px;
+  text-align: center;
+  line-height: 1;
+}
+
+/* Bolinhas: espalham para preencher o espaço disponível */
+.expanded-fouls-dots {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.foul-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  transition: background 0.3s, border-color 0.3s;
+}
+
+.foul-dot.filled {
+  background: var(--chevron-color);
+  border-color: var(--chevron-color);
+}
+
+.expanded-fouls-dlp {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--chevron-color);
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.fouls-separator {
+  width: 1px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  margin: 0 30px;
+}

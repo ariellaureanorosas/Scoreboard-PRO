@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, initial-scale=1.0">
+    <title>Overlay Futsal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Oswald:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="overlay.css">
+</head>
+<body>
+    <!-- MODO COMPACTO (faixa) -->
+    <div id="scoreboardCompact" class="scoreboard position-top">
+      <div class="compact-bar">
+        <!-- Segmento 1: Badge da competição -->
+        <div class="compact-segment compact-badge">
+          <img id="competitionLogo" src="" alt="">
+        </div>
+        <!-- Segmento 2: Cronômetro -->
+        <div class="compact-segment compact-clock">
+          <span id="timer">20:00</span>
+        </div>
+        <!-- Segmento 4: Trave de cor do Time A -->
+        <div class="compact-segment compact-team-a-color-bar">
+          <div class="compact-team-a-color-top"></div>
+          <div class="compact-team-a-color-bottom"></div>
+        </div>
+        <!-- Segmento 5: Bloco principal do placar -->
+        <div class="compact-segment compact-score-block">
+          <span class="compact-abbr" id="abbrA">TIM</span>
+          <span class="compact-chevron-right">&#8250;</span>
+          <span class="compact-goals" id="scoreA">0</span>
+          <span class="compact-sep">|</span>
+          <span class="compact-goals" id="scoreB">0</span>
+          <span class="compact-chevron-left">&#8249;</span>
+          <span class="compact-abbr" id="abbrB">TIM</span>
+        </div>
+        <!-- Segmento 6: Trave de cor do Time B -->
+        <div class="compact-segment compact-team-b-color-bar">
+          <div class="compact-team-b-color-top"></div>
+          <div class="compact-team-b-color-bottom"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODO EXPANDIDO -->
+    <div id="scoreboardExpanded" class="scoreboard-expanded position-top">
+        <!-- Linha 1: Info do gol (artilheiro + minuto) -->
+        <div class="expanded-goal-info" id="expandedGoalInfo">
+            <span id="goalScorerText"></span>
+        </div>
+        <!-- Divisor decorativo -->
+        <div class="expanded-divider"></div>
+        <!-- Linha 2: Placar principal -->
+        <div class="expanded-main">
+            <div class="expanded-crest expanded-crest-a" id="crestContainerA">
+                <img id="crestA" src="">
+            </div>
+            <span class="expanded-team-name expanded-team-name-a" id="expandedNameA">Time A</span>
+            <div class="expanded-score-center">
+                <span class="expanded-bracket">&#8250;</span>
+                <span class="expanded-goals" id="expandedScoreA">0</span>
+                <span class="expanded-sep">|</span>
+                <span class="expanded-goals" id="expandedScoreB">0</span>
+                <span class="expanded-bracket">&#8249;</span>
+            </div>
+            <span class="expanded-team-name expanded-team-name-b" id="expandedNameB">Time B</span>
+            <div class="expanded-crest expanded-crest-b" id="crestContainerB">
+                <img id="crestB" src="">
+            </div>
+        </div>
+        <!-- Linha 3: Faltas -->
+        <div class="expanded-fouls">
+            <!-- Label -->
+            <span class="expanded-fouls-label">FALTAS</span>
+            <!-- Time A -->
+            <div class="expanded-fouls-side expanded-fouls-side-a">
+                <span class="expanded-fouls-count" id="foulsCountA">0</span>
+                <div class="expanded-fouls-dots" id="foulsDotsA">
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                </div>
+                <span class="expanded-fouls-dlp hidden" id="foulsDlpA">DLP 0</span>
+            </div>
+            <!-- Separador -->
+            <span class="fouls-separator"></span>
+            <!-- Time B -->
+            <div class="expanded-fouls-side expanded-fouls-side-b">
+                <span class="expanded-fouls-dlp hidden" id="foulsDlpB">DLP 0</span>
+                <div class="expanded-fouls-dots" id="foulsDotsB">
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                    <span class="foul-dot"></span>
+                </div>
+                <span class="expanded-fouls-count" id="foulsCountB">0</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="overlay.js"></script>
+</body>
+</html>

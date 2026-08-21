@@ -1,0 +1,811 @@
+/**
+ * PAINEL DE CONTROLE - JavaScript
+ * 
+ * Gerencia todas as interações do painel e comunica com o servidor
+ * via WebSocket para atualizar o overlay em tempo real.
+ */
+
+const socket = io();
+
+// Referências dos elementos DOM
+const elements = {
+  // Placar
+  scoreDisplayA: document.getElementById('scoreDisplayA'),
+  scoreDisplayB: document.getElementById('scoreDisplayB'),
+  teamNameA: document.getElementById('teamNameA'),
+  teamNameB: document.getElementById('teamNameB'),
+  
+  // Cronômetro
+  timerDisplay: document.getElementById('timerDisplay'),
+  btnStartPause: document.getElementById('btnStartPause'),
+  timerDuration: document.getElementById('timerDuration'),
+  
+  // Faltas
+  foulsDisplayA: document.getElementById('foulsDisplayA'),
+  foulsDisplayB: document.getElementById('foulsDisplayB'),
+  foulsTeamNameA: document.getElementById('foulsTeamNameA'),
+  foulsTeamNameB: document.getElementById('foulsTeamNameB'),
+  
+  // Times
+  teamNameInputA: document.getElementById('teamNameInputA'),
+  teamNameInputB: document.getElementById('teamNameInputB'),
+  teamAbbrInputA: document.getElementById('teamAbbrInputA'),
+  teamAbbrInputB: document.getElementById('teamAbbrInputB'),
+  teamColorPrimaryA: document.getElementById('teamColorPrimaryA'),
+  teamColorSecondaryA: document.getElementById('teamColorSecondaryA'),
+  teamColorPrimaryB: document.getElementById('teamColorPrimaryB'),
+  teamColorSecondaryB: document.getElementById('teamColorSecondaryB'),
+  logoPreviewA: document.getElementById('logoPreviewA'),
+  logoPreviewB: document.getElementById('logoPreviewB'),
+  logoInputA: document.getElementById('logoInputA'),
+  logoInputB: document.getElementById('logoInputB'),
+  
+  // Logo da competição
+  competitionLogoInput: document.getElementById('competitionLogoInput'),
+  competitionLogoPreview: document.getElementById('competitionLogoPreview'),
+  compLogoSize: document.getElementById('compLogoSize'),
+  compLogoSizeValue: document.getElementById('compLogoSizeValue'),
+  
+  // Posição
+  btnPosTop: document.getElementById('btnPosTop'),
+  btnPosBottom: document.getElementById('btnPosBottom'),
+  
+  // Modo Expandido
+  btnExpandedMode: document.getElementById('btnExpandedMode'),
+  expandedAutoHideSeconds: document.getElementById('expandedAutoHideSeconds'),
+  
+  // Info do Gol
+  goalScorerA: document.getElementById('goalScorerA'),
+  goalMinuteA: document.getElementById('goalMinuteA'),
+  goalTypeA: document.getElementById('goalTypeA'),
+  goalScorerB: document.getElementById('goalScorerB'),
+  goalMinuteB: document.getElementById('goalMinuteB'),
+  goalTypeB: document.getElementById('goalTypeB'),
+  
+  // Status
+  connectionStatus: document.getElementById('connectionStatus')
+};
+
+// Estado atual do jogo
+let currentState = null;
+
+/**
+ * Formata segundos para MM:SS
+ */
+function formatTime(seconds) {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+}
+
+/**
+ * Atualiza a interface com o estado do jogo
+ */
+function updateUI(state) {
+  currentState = state;
+  
+  // Placar
+  elements.scoreDisplayA.textContent = state.teamA.goals;
+  elements.scoreDisplayB.textContent = state.teamB.goals;
+  elements.teamNameA.textContent = state.teamA.name;
+  elements.teamNameB.textContent = state.teamB.name;
+  
+  // Faltas
+  elements.foulsDisplayA.textContent = state.teamA.fouls;
+  elements.foulsDisplayB.textContent = state.teamB.fouls;
+  elements.foulsTeamNameA.textContent = state.teamA.name;
+  elements.foulsTeamNameB.textContent = state.teamB.name;
+  
+  // Cronômetro
+  elements.timerDisplay.textContent = formatTime(state.timer.remaining);
+  elements.timerDuration.value = Math.floor(state.timer.duration / 60);
+  
+  // Botão Iniciar/Pausar
+  if (state.timer.running) {
+    elements.btnStartPause.textContent = 'Pausar';
+    elements.btnStartPause.classList.add('running');
+  } else {
+    elements.btnStartPause.textContent = 'Iniciar';
+    elements.btnStartPause.classList.remove('running');
+  }
+  
+  // Nomes dos times nos inputs
+  elements.teamNameInputA.value = state.teamA.name;
+  elements.teamNameInputB.value = state.teamB.name;
+  
+  // Siglas
+  elements.teamAbbrInputA.value = state.teamA.abbreviation || '';
+  elements.teamAbbrInputB.value = state.teamB.abbreviation || '';
+  
+  // Cores
+  elements.teamColorPrimaryA.value = state.teamA.colorPrimary || '#000000';
+  elements.teamColorSecondaryA.value = state.teamA.colorSecondary || '#ffffff';
+  elements.teamColorPrimaryB.value = state.teamB.colorPrimary || '#e51937';
+  elements.teamColorSecondaryB.value = state.teamB.colorSecondary || '#000000';
+  
+  // Logos
+  updateLogoPreview('A', state.teamA.logo);
+  updateLogoPreview('B', state.teamB.logo);
+  
+  // Logo da competição
+  updateCompetitionLogoPreview(state.competitionLogo);
+  
+  // Período
+  document.querySelectorAll('.btn-period').forEach(btn => {
+    btn.classList.remove('active');
+    if (btn.dataset.period === state.period) {
+      btn.classList.add('active');
+    }
+  });
+  
+  // Posição do overlay
+  if (state.overlayPosition === 'top') {
+    elements.btnPosTop.classList.add('active');
+    elements.btnPosBottom.classList.remove('active');
+  } else {
+    elements.btnPosTop.classList.remove('active');
+    elements.btnPosBottom.classList.add('active');
+  }
+  
+  // Modo expandido
+  if (state.expandedMode) {
+    elements.btnExpandedMode.textContent = 'Ocultar Expandido';
+    elements.btnExpandedMode.classList.add('active');
+  } else {
+    elements.btnExpandedMode.textContent = 'Mostrar Expandido';
+    elements.btnExpandedMode.classList.remove('active');
+  }
+  
+  // Auto-hide seconds
+  elements.expandedAutoHideSeconds.value = state.expandedAutoHideSeconds || 10;
+  
+  // Tamanhos de logo
+  elements.compLogoSize.value = state.competitionLogoSize || 80;
+  elements.compLogoSizeValue.textContent = state.competitionLogoSize || 80;
+}
+
+/**
+ * Atualiza o preview do logo
+ */
+function updateLogoPreview(team, logoPath) {
+  const preview = team === 'A' ? elements.logoPreviewA : elements.logoPreviewB;
+  
+  if (logoPath) {
+    preview.innerHTML = `<img src="${logoPath}" alt="Escudo Time ${team}">`;
+  } else {
+    preview.innerHTML = '';
+  }
+}
+
+/**
+ * Atualiza o preview do logo da competição
+ */
+function updateCompetitionLogoPreview(logoPath) {
+  if (logoPath) {
+    elements.competitionLogoPreview.innerHTML = `<img src="${logoPath}" alt="Logo Competição">`;
+  } else {
+    elements.competitionLogoPreview.innerHTML = '';
+  }
+}
+
+// ========================
+// FUNÇÕES DE CONTROLE
+// ========================
+
+/**
+ * Atualiza o placar
+ */
+function updateScore(team, action) {
+  socket.emit('score:update', { team, action });
+  
+  // Se for incremento de gol, enviar info do gol e ativar modo expandido
+  if (action === 'increment') {
+    const scorerInput = team === 'A' ? elements.goalScorerA : elements.goalScorerB;
+    const minuteInput = team === 'A' ? elements.goalMinuteA : elements.goalMinuteB;
+    const typeSelect = team === 'A' ? elements.goalTypeA : elements.goalTypeB;
+    
+    const scorer = scorerInput.value.trim();
+    const minute = minuteInput.value.trim();
+    const type = typeSelect.value;
+    
+    // Atualizar info do gol
+    socket.emit('goalInfo:update', { scorer, minute, type });
+    
+    // Ativar modo expandido temporariamente
+    socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
+    
+    // Limpar campos
+    scorerInput.value = '';
+    minuteInput.value = '';
+    typeSelect.value = '';
+  }
+}
+
+/**
+ * Atualiza as faltas
+ */
+function updateFouls(team, action) {
+  socket.emit('fouls:update', { team, action });
+}
+
+/**
+ * Controla o cronômetro (iniciar/pausar)
+ */
+function toggleTimer() {
+  if (currentState && currentState.timer.running) {
+    socket.emit('timer:action', { action: 'pause' });
+  } else {
+    socket.emit('timer:action', { action: 'start' });
+  }
+}
+
+/**
+ * Zera o cronômetro
+ */
+function resetTimer() {
+  if (confirm('Tem certeza que deseja zerar o cronômetro?')) {
+    socket.emit('timer:action', { action: 'reset' });
+  }
+}
+
+/**
+ * Define a duração do período
+ */
+function setTimerDuration() {
+  const minutes = parseInt(elements.timerDuration.value) || 20;
+  const seconds = minutes * 60;
+  socket.emit('timer:action', { action: 'setDuration', value: seconds });
+}
+
+/**
+ * Ajusta o tempo manualmente
+ */
+function adjustTimer(seconds) {
+  socket.emit('timer:action', { action: 'adjust', value: seconds });
+}
+
+/**
+ * Reseta o placar
+ */
+function resetScore() {
+  if (confirm('Tem certeza que deseja resetar o placar? Isso irá zerar os gols dos dois times.')) {
+    socket.emit('score:update', { team: 'A', action: 'reset' });
+    socket.emit('score:update', { team: 'B', action: 'reset' });
+  }
+}
+
+/**
+ * Reseta as faltas
+ */
+function resetFouls() {
+  if (confirm('Tem certeza que deseja resetar as faltas?')) {
+    socket.emit('fouls:update', { team: 'A', action: 'reset' });
+    socket.emit('fouls:update', { team: 'B', action: 'reset' });
+  }
+}
+
+/**
+ * Alterna modo expandido no overlay
+ */
+function toggleExpandedMode() {
+  socket.emit('expandedMode:toggle');
+}
+
+/**
+ * Define tamanho do logo da competição
+ */
+function setCompetitionLogoSize(size) {
+  elements.compLogoSizeValue.textContent = size;
+  socket.emit('competitionLogo:size', { size: parseInt(size) });
+}
+
+/**
+ * Define auto-hide seconds para modo expandido
+ */
+function setExpandedAutoHideSeconds() {
+  const seconds = parseInt(elements.expandedAutoHideSeconds.value) || 10;
+  socket.emit('expandedMode:show', { autoHide: true, seconds });
+}
+
+/**
+ * Define o período do jogo
+ */
+function setPeriod(btn) {
+  const period = btn.dataset.period;
+  socket.emit('period:update', { period });
+}
+
+/**
+ * Reseta cronômetro e faltas para novo período
+ */
+function resetForNewPeriod() {
+  if (confirm('Resetar cronômetro e faltas para o novo período?')) {
+    socket.emit('timer:action', { action: 'reset' });
+    socket.emit('fouls:update', { team: 'A', action: 'reset' });
+    socket.emit('fouls:update', { team: 'B', action: 'reset' });
+  }
+}
+
+/**
+ * Define a posição do overlay
+ */
+function setPosition(position) {
+  socket.emit('position:update', { position });
+}
+
+/**
+ * Atualiza o nome do time
+ */
+function updateTeamName(team) {
+  const input = team === 'A' ? elements.teamNameInputA : elements.teamNameInputB;
+  const name = input.value.trim();
+  if (name) {
+    socket.emit('team:update', { team, name });
+  }
+}
+
+/**
+ * Faz upload do logo — abre o editor de recorte
+ */
+function uploadLogo(team) {
+  const input = team === 'A' ? elements.logoInputA : elements.logoInputB;
+  const file = input.files[0];
+
+  if (!file) return;
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.');
+    input.value = '';
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Arquivo muito grande. Tamanho máximo: 2MB.');
+    input.value = '';
+    return;
+  }
+
+  openCropModal(file, `team:${team}`);
+  input.value = '';
+}
+
+/**
+ * Remove o logo
+ */
+function removeLogo(team) {
+  if (confirm('Remover o escudo deste time?')) {
+    fetch(`/api/logo/${team}`, { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          updateLogoPreview(team, null);
+        }
+      })
+      .catch(err => {
+        alert('Erro ao remover logo: ' + err.message);
+      });
+  }
+}
+
+/**
+ * Faz upload do logo da competição — abre o editor de recorte
+ */
+function uploadCompetitionLogo() {
+  const input = elements.competitionLogoInput;
+  const file = input.files[0];
+
+  if (!file) return;
+
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.');
+    input.value = '';
+    return;
+  }
+
+  if (file.size > 2 * 1024 * 1024) {
+    alert('Arquivo muito grande. Tamanho máximo: 2MB.');
+    input.value = '';
+    return;
+  }
+
+  openCropModal(file, 'competition');
+  input.value = '';
+}
+
+// ========================
+// EDITOR DE RECORTE DE IMAGEM
+// ========================
+
+// Dimensões reais de cada imagem no placar (overlay.css)
+const CROP_TARGETS = {
+  'competition': { w: 48, h: 58, shape: 'rect',   label: '48 × 58 px' },
+  'team:A':      { w: 55, h: 55, shape: 'circle', label: '55 × 55 px (círculo)' },
+  'team:B':      { w: 55, h: 55, shape: 'circle', label: '55 × 55 px (círculo)' }
+};
+
+// Tamanho máximo do frame no modal (o maior lado)
+const CROP_PREVIEW_MAX = 320;
+
+const cropState = {
+  img: null,
+  target: null,      // 'team:A' | 'team:B' | 'competition'
+  scale: 1,          // zoom relativo ao ajuste inicial (fit)
+  minScale: 1,
+  offsetX: 0,
+  offsetY: 0,
+  dragging: false,
+  lastX: 0,
+  lastY: 0,
+  canvasW: 320,
+  canvasH: 320
+};
+
+function openCropModal(file, target) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      cropState.img = img;
+      cropState.target = target;
+
+      // Configura o frame com a proporção real do alvo no placar
+      const t = CROP_TARGETS[target];
+      const scaleFactor = CROP_PREVIEW_MAX / Math.max(t.w, t.h);
+      const canvasW = Math.round(t.w * scaleFactor);
+      const canvasH = Math.round(t.h * scaleFactor);
+
+      cropState.canvasW = canvasW;
+      cropState.canvasH = canvasH;
+
+      const canvas = document.getElementById('cropCanvas');
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+
+      const frame = document.getElementById('cropFrame');
+      frame.style.width = `${canvasW}px`;
+      frame.style.height = `${canvasH}px`;
+      frame.classList.toggle('shape-circle', t.shape === 'circle');
+
+      document.getElementById('cropSizeLabel').textContent = `Tamanho real no placar: ${t.label}`;
+
+      resetCropView();
+      document.getElementById('cropModal').classList.remove('hidden');
+      document.getElementById('cropZoom').value = 100;
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function closeCropModal() {
+  document.getElementById('cropModal').classList.add('hidden');
+  cropState.img = null;
+  cropState.target = null;
+}
+
+function resetCropView() {
+  cropState.scale = 1;
+  cropState.offsetX = 0;
+  cropState.offsetY = 0;
+  drawCropCanvas();
+}
+
+function drawCropCanvas() {
+  const canvas = document.getElementById('cropCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const w = cropState.canvasW;
+  const h = cropState.canvasH;
+
+  ctx.clearRect(0, 0, w, h);
+
+  // Fundo quadriculado para indicar transparência
+  ctx.fillStyle = '#2a2a2a';
+  ctx.fillRect(0, 0, w, h);
+
+  if (!cropState.img) return;
+
+  const target = CROP_TARGETS[cropState.target];
+
+  ctx.save();
+
+  // Moldura circular para escudos (mesma forma do placar)
+  if (target && target.shape === 'circle') {
+    ctx.beginPath();
+    ctx.arc(w / 2, h / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+    ctx.clip();
+  }
+
+  // Ajuste inicial: imagem cabe inteira na área (contain)
+  const img = cropState.img;
+  const fitScale = Math.min(w / img.width, h / img.height);
+  const drawW = img.width * fitScale * cropState.scale;
+  const drawH = img.height * fitScale * cropState.scale;
+  const centerX = w / 2 + cropState.offsetX;
+  const centerY = h / 2 + cropState.offsetY;
+
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(img, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
+
+  ctx.restore();
+}
+
+function confirmCrop() {
+  if (!cropState.img || !cropState.target) return;
+
+  const target = CROP_TARGETS[cropState.target];
+
+  // Exporta em alta resolução mantendo a proporção real do alvo
+  const exportScale = 512 / Math.max(target.w, target.h);
+  const exportW = Math.round(target.w * exportScale);
+  const exportH = Math.round(target.h * exportScale);
+  // Fator entre canvas de export e canvas de preview (mesma proporção)
+  const ratio = exportW / cropState.canvasW;
+
+  const out = document.createElement('canvas');
+  out.width = exportW;
+  out.height = exportH;
+  const octx = out.getContext('2d');
+
+  octx.save();
+
+  if (target.shape === 'circle') {
+    octx.beginPath();
+    octx.arc(exportW / 2, exportH / 2, Math.min(exportW, exportH) / 2, 0, Math.PI * 2);
+    octx.clip();
+  }
+
+  const img = cropState.img;
+  const fitScale = Math.min(cropState.canvasW / img.width, cropState.canvasH / img.height);
+  const drawW = img.width * fitScale * cropState.scale * ratio;
+  const drawH = img.height * fitScale * cropState.scale * ratio;
+  const centerX = exportW / 2 + cropState.offsetX * ratio;
+  const centerY = exportH / 2 + cropState.offsetY * ratio;
+
+  octx.imageSmoothingQuality = 'high';
+  octx.drawImage(img, centerX - drawW / 2, centerY - drawH / 2, drawW, drawH);
+
+  octx.restore();
+
+  const dataURL = out.toDataURL('image/png');
+
+  let url;
+  let onSuccess;
+  if (cropState.target === 'competition') {
+    url = '/api/upload-competition-logo-crop';
+    onSuccess = (data) => updateCompetitionLogoPreview(data.logo);
+  } else {
+    const team = cropState.target.split(':')[1];
+    url = `/api/upload-logo-crop/${team}`;
+    onSuccess = (data) => updateLogoPreview(team, data.logo);
+  }
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ image: dataURL })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.success) {
+      onSuccess(data);
+      closeCropModal();
+    } else {
+      alert('Erro ao salvar recorte: ' + (data.error || 'Erro desconhecido'));
+    }
+  })
+  .catch(err => {
+    alert('Erro ao salvar recorte: ' + err.message);
+  });
+}
+
+// Interação com o canvas: arrastar para mover
+document.addEventListener('DOMContentLoaded', () => {
+  const canvas = document.getElementById('cropCanvas');
+  const zoomSlider = document.getElementById('cropZoom');
+  if (!canvas) return;
+
+  canvas.addEventListener('mousedown', (e) => {
+    cropState.dragging = true;
+    cropState.lastX = e.clientX;
+    cropState.lastY = e.clientY;
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!cropState.dragging) return;
+    cropState.offsetX += e.clientX - cropState.lastX;
+    cropState.offsetY += e.clientY - cropState.lastY;
+    cropState.lastX = e.clientX;
+    cropState.lastY = e.clientY;
+    drawCropCanvas();
+  });
+
+  window.addEventListener('mouseup', () => {
+    cropState.dragging = false;
+  });
+
+  // Zoom com a roda do mouse sobre a área de recorte
+  document.getElementById('cropFrame').addEventListener('wheel', (e) => {
+    e.preventDefault();
+    let zoom = parseInt(zoomSlider.value);
+    zoom += e.deltaY < 0 ? 10 : -10;
+    zoom = Math.max(100, Math.min(400, zoom));
+    zoomSlider.value = zoom;
+    applyZoom(zoom);
+  }, { passive: false });
+
+  zoomSlider.addEventListener('input', () => {
+    applyZoom(parseInt(zoomSlider.value));
+  });
+});
+
+function applyZoom(zoomPercent) {
+  if (!cropState.img) return;
+  cropState.scale = zoomPercent / 100;
+  drawCropCanvas();
+}
+
+/**
+ * Remove o logo da competição
+ */
+function removeCompetitionLogo() {
+  if (confirm('Remover o logo da competição?')) {
+    fetch('/api/competition-logo', { method: 'DELETE' })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          updateCompetitionLogoPreview(null);
+        }
+      })
+      .catch(err => {
+        alert('Erro ao remover logo: ' + err.message);
+      });
+  }
+}
+
+/**
+ * Reseta tudo
+ */
+function resetAll() {
+  if (confirm('ATENÇÃO: Isso irá resetar placar, faltas, cronômetro e remover todos os escudos. Tem certeza?')) {
+    if (confirm('Última chance: confirmar reset geral?')) {
+      socket.emit('state:reset');
+    }
+  }
+}
+
+// ========================
+// EVENTOS WEBSOCKET
+// ========================
+
+// Conexao
+socket.on('connect', () => {
+  console.log('Conectado ao servidor');
+  elements.connectionStatus.classList.add('connected');
+  elements.connectionStatus.classList.remove('error');
+  elements.connectionStatus.querySelector('.status-text').textContent = 'Conectado';
+  
+  // Solicita estado inicial
+  socket.emit('getInitialState');
+});
+
+// Desconexao
+socket.on('disconnect', () => {
+  console.log('Desconectado do servidor');
+  elements.connectionStatus.classList.remove('connected');
+  elements.connectionStatus.classList.add('error');
+  elements.connectionStatus.querySelector('.status-text').textContent = 'Desconectado';
+});
+
+// Erro de conexao
+socket.on('connect_error', (err) => {
+  console.error('Erro de conexão:', err.message);
+  elements.connectionStatus.classList.remove('connected');
+  elements.connectionStatus.classList.add('error');
+  elements.connectionStatus.querySelector('.status-text').textContent = 'Erro de conexão';
+});
+
+// Sincronizacao de estado
+socket.on('state:sync', (state) => {
+  updateUI(state);
+});
+
+// Tick do cronômetro
+socket.on('timer:tick', (data) => {
+  if (currentState) {
+    currentState.timer.remaining = data.remaining;
+    currentState.timer.running = data.running;
+    elements.timerDisplay.textContent = formatTime(data.remaining);
+    
+    if (data.running) {
+      elements.btnStartPause.textContent = 'Pausar';
+      elements.btnStartPause.classList.add('running');
+    } else {
+      elements.btnStartPause.textContent = 'Iniciar';
+      elements.btnStartPause.classList.remove('running');
+    }
+  }
+});
+
+// Reset completo
+socket.on('state:resetDone', () => {
+  alert('Reset completo realizado!');
+});
+
+// ========================
+// EVENTOS DE INPUT
+// ========================
+
+// Atualização do nome do time com debounce
+let nameTimeoutA = null;
+let nameTimeoutB = null;
+
+elements.teamNameInputA.addEventListener('input', () => {
+  clearTimeout(nameTimeoutA);
+  nameTimeoutA = setTimeout(() => updateTeamName('A'), 500);
+});
+
+elements.teamNameInputB.addEventListener('input', () => {
+  clearTimeout(nameTimeoutB);
+  nameTimeoutB = setTimeout(() => updateTeamName('B'), 500);
+});
+
+// Enter nos inputs de nome
+elements.teamNameInputA.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') updateTeamName('A');
+});
+
+elements.teamNameInputB.addEventListener('keypress', (e) => {
+  if (e.key === 'Enter') updateTeamName('B');
+});
+
+// Atualização da sigla/abreviação
+let abbrTimeoutA = null;
+let abbrTimeoutB = null;
+
+elements.teamAbbrInputA.addEventListener('input', () => {
+  clearTimeout(abbrTimeoutA);
+  abbrTimeoutA = setTimeout(() => {
+    socket.emit('team:abbreviation', { team: 'A', abbreviation: elements.teamAbbrInputA.value });
+  }, 500);
+});
+
+elements.teamAbbrInputB.addEventListener('input', () => {
+  clearTimeout(abbrTimeoutB);
+  abbrTimeoutB = setTimeout(() => {
+    socket.emit('team:abbreviation', { team: 'B', abbreviation: elements.teamAbbrInputB.value });
+  }, 500);
+});
+
+// Atualização das cores
+elements.teamColorPrimaryA.addEventListener('input', () => {
+  socket.emit('team:colors', { team: 'A', colorPrimary: elements.teamColorPrimaryA.value, colorSecondary: elements.teamColorSecondaryA.value });
+});
+
+elements.teamColorSecondaryA.addEventListener('input', () => {
+  socket.emit('team:colors', { team: 'A', colorPrimary: elements.teamColorPrimaryA.value, colorSecondary: elements.teamColorSecondaryA.value });
+});
+
+elements.teamColorPrimaryB.addEventListener('input', () => {
+  socket.emit('team:colors', { team: 'B', colorPrimary: elements.teamColorPrimaryB.value, colorSecondary: elements.teamColorSecondaryB.value });
+});
+
+elements.teamColorSecondaryB.addEventListener('input', () => {
+  socket.emit('team:colors', { team: 'B', colorPrimary: elements.teamColorPrimaryB.value, colorSecondary: elements.teamColorSecondaryB.value });
+});
+
+// ========================
+// INICIALIZAÇÃO
+// ========================
+
+// Busca estado inicial via HTTP como fallback
+fetch('/api/state')
+  .then(res => res.json())
+  .then(state => {
+    updateUI(state);
+  })
+  .catch(err => {
+    console.error('Erro ao buscar estado inicial:', err);
+  });

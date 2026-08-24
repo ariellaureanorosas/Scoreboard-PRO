@@ -1,6 +1,7 @@
 # Runtime / dados voláteis
 state.json
 public/assets/logos/
+public/assets/players/
 node_modules/
 .env
 *.log

@@ -35,18 +35,10 @@ const elements = {
   foulsTeamNameB: document.getElementById('foulsTeamNameB'),
   
   // Times
-  teamNameInputA: document.getElementById('teamNameInputA'),
-  teamNameInputB: document.getElementById('teamNameInputB'),
-  teamAbbrInputA: document.getElementById('teamAbbrInputA'),
-  teamAbbrInputB: document.getElementById('teamAbbrInputB'),
-  teamColorPrimaryA: document.getElementById('teamColorPrimaryA'),
-  teamColorSecondaryA: document.getElementById('teamColorSecondaryA'),
-  teamColorPrimaryB: document.getElementById('teamColorPrimaryB'),
-  teamColorSecondaryB: document.getElementById('teamColorSecondaryB'),
-  logoPreviewA: document.getElementById('logoPreviewA'),
-  logoPreviewB: document.getElementById('logoPreviewB'),
-  logoInputA: document.getElementById('logoInputA'),
-  logoInputB: document.getElementById('logoInputB'),
+  teamSelectA: document.getElementById('teamSelectA'),
+  teamSelectB: document.getElementById('teamSelectB'),
+  teamPreviewA: document.getElementById('teamPreviewA'),
+  teamPreviewB: document.getElementById('teamPreviewB'),
   
   // Logo da competição
   competitionLogoInput: document.getElementById('competitionLogoInput'),
@@ -83,6 +75,8 @@ const elements = {
   teamLogoInput: document.getElementById('teamLogoInput'),
   teamLogoPreview: document.getElementById('teamLogoPreview'),
   teamLogoData: document.getElementById('teamLogoData'),
+  teamColorPrimary: document.getElementById('teamColorPrimary'),
+  teamColorSecondary: document.getElementById('teamColorSecondary'),
   playersList: document.getElementById('playersList'),
   
   // Status
@@ -107,9 +101,7 @@ function formatTime(seconds) {
 function updateUI(state) {
   currentState = state;
   
-  // Placar
-  elements.scoreDisplayA.textContent = state.teamA.goals;
-  elements.scoreDisplayB.textContent = state.teamB.goals;
+  // Nomes dos times
   elements.teamNameA.textContent = state.teamA.name;
   elements.teamNameB.textContent = state.teamB.name;
   
@@ -132,24 +124,6 @@ function updateUI(state) {
     elements.btnStartPause.classList.remove('running');
   }
   
-  // Nomes dos times nos inputs
-  elements.teamNameInputA.value = state.teamA.name;
-  elements.teamNameInputB.value = state.teamB.name;
-  
-  // Siglas
-  elements.teamAbbrInputA.value = state.teamA.abbreviation || '';
-  elements.teamAbbrInputB.value = state.teamB.abbreviation || '';
-  
-  // Cores
-  elements.teamColorPrimaryA.value = state.teamA.colorPrimary || '#000000';
-  elements.teamColorSecondaryA.value = state.teamA.colorSecondary || '#ffffff';
-  elements.teamColorPrimaryB.value = state.teamB.colorPrimary || '#e51937';
-  elements.teamColorSecondaryB.value = state.teamB.colorSecondary || '#000000';
-  
-  // Logos
-  updateLogoPreview('A', state.teamA.logo);
-  updateLogoPreview('B', state.teamB.logo);
-  
   // Logo da competição
   updateCompetitionLogoPreview(state.competitionLogo);
   
@@ -167,19 +141,6 @@ function updateUI(state) {
   
   // Auto-hide seconds
   elements.expandedAutoHideSeconds.value = state.expandedAutoHideSeconds || 10;
-}
-
-/**
- * Atualiza o preview do logo
- */
-function updateLogoPreview(team, logoPath) {
-  const preview = team === 'A' ? elements.logoPreviewA : elements.logoPreviewB;
-  
-  if (logoPath) {
-    preview.innerHTML = `<img src="${logoPath}" alt="Escudo Time ${team}">`;
-  } else {
-    preview.innerHTML = '';
-  }
 }
 
 /**
@@ -425,61 +386,6 @@ function resetForNewPeriod() {
 }
 
 /**
- * Atualiza o nome do time
- */
-function updateTeamName(team) {
-  const input = team === 'A' ? elements.teamNameInputA : elements.teamNameInputB;
-  const name = input.value.trim();
-  if (name) {
-    socket.emit('team:update', { team, name });
-  }
-}
-
-/**
- * Faz upload do logo — abre o editor de recorte
- */
-function uploadLogo(team) {
-  const input = team === 'A' ? elements.logoInputA : elements.logoInputB;
-  const file = input.files[0];
-
-  if (!file) return;
-
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/svg+xml'];
-  if (!allowedTypes.includes(file.type)) {
-    alert('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.');
-    input.value = '';
-    return;
-  }
-
-  if (file.size > 2 * 1024 * 1024) {
-    alert('Arquivo muito grande. Tamanho máximo: 2MB.');
-    input.value = '';
-    return;
-  }
-
-  openCropModal(file, `team:${team}`);
-  input.value = '';
-}
-
-/**
- * Remove o logo
- */
-function removeLogo(team) {
-  if (confirm('Remover o escudo deste time?')) {
-    fetch(`/api/logo/${team}`, { method: 'DELETE' })
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          updateLogoPreview(team, null);
-        }
-      })
-      .catch(err => {
-        alert('Erro ao remover logo: ' + err.message);
-      });
-  }
-}
-
-/**
  * Faz upload do logo da competição — abre o editor de recorte
  */
 function uploadCompetitionLogo() {
@@ -512,8 +418,8 @@ function uploadCompetitionLogo() {
 // ATENÇÃO: 'competition' deve espelhar --badge-width e --bar-height do overlay.css
 const CROP_TARGETS = {
   'competition': { w: 48, h: 44, shape: 'rect',   label: '48 × 44 px' },
-  'team:A':      { w: 62, h: 62, shape: 'circle', label: '62 × 62 px (círculo)' },
-  'team:B':      { w: 62, h: 62, shape: 'circle', label: '62 × 62 px (círculo)' }
+  'team:modal':  { w: 128, h: 128, shape: 'circle', label: '128 × 128 px (círculo)' },
+  'player:modal':{ w: 128, h: 128, shape: 'circle', label: '128 × 128 px (círculo)' }
 };
 
 // Tamanho máximo do frame no modal (o maior lado)
@@ -521,7 +427,9 @@ const CROP_PREVIEW_MAX = 320;
 
 const cropState = {
   img: null,
-  target: null,      // 'team:A' | 'team:B' | 'competition'
+  target: null,      // 'competition' | 'team:modal' | 'player:modal'
+  teamId: null,
+  playerId: null,
   scale: 1,          // zoom relativo ao ajuste inicial (fit)
   minScale: 1,
   offsetX: 0,
@@ -533,13 +441,15 @@ const cropState = {
   canvasH: 320
 };
 
-function openCropModal(file, target) {
+function openCropModal(file, target, extra = {}) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
       cropState.img = img;
       cropState.target = target;
+      cropState.teamId = extra.teamId || null;
+      cropState.playerId = extra.playerId || null;
 
       // Configura o frame com a proporção real do alvo no placar
       const t = CROP_TARGETS[target];
@@ -662,34 +572,86 @@ function confirmCrop() {
 
   const dataURL = out.toDataURL('image/png');
 
-  let url;
-  let onSuccess;
   if (cropState.target === 'competition') {
-    url = '/api/upload-competition-logo-crop';
-    onSuccess = (data) => updateCompetitionLogoPreview(data.logo);
-  } else {
-    const team = cropState.target.split(':')[1];
-    url = `/api/upload-logo-crop/${team}`;
-    onSuccess = (data) => updateLogoPreview(team, data.logo);
+    fetch('/api/upload-competition-logo-crop', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ image: dataURL })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        updateCompetitionLogoPreview(data.logo);
+        closeCropModal();
+      } else {
+        alert('Erro ao salvar recorte: ' + (data.error || 'Erro desconhecido'));
+      }
+    })
+    .catch(err => {
+      alert('Erro ao salvar recorte: ' + err.message);
+    });
+    return;
   }
 
-  fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: dataURL })
-  })
-  .then(res => res.json())
-  .then(data => {
-    if (data.success) {
-      onSuccess(data);
-      closeCropModal();
+  if (cropState.target === 'team:modal') {
+    const blob = dataURLtoBlob(dataURL);
+    const formData = new FormData();
+    formData.append('logo', blob, 'logo.png');
+
+    if (currentTeamId) {
+      fetch(`/api/teams/${currentTeamId}/logo`, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            elements.teamLogoPreview.innerHTML = `<img src="${data.logo}" alt="Escudo">`;
+            elements.teamLogoData.value = data.logo;
+            pendingLogoFile = null;
+          } else {
+            alert('Erro ao salvar escudo: ' + (data.error || 'Erro desconhecido'));
+          }
+        })
+        .catch(err => alert('Erro ao salvar escudo: ' + err.message));
     } else {
-      alert('Erro ao salvar recorte: ' + (data.error || 'Erro desconhecido'));
+      pendingLogoFile = blob;
+      elements.teamLogoPreview.innerHTML = `<img src="${dataURL}" alt="Escudo">`;
+      elements.teamLogoData.value = dataURL;
     }
-  })
-  .catch(err => {
-    alert('Erro ao salvar recorte: ' + err.message);
-  });
+    closeCropModal();
+    return;
+  }
+
+  if (cropState.target === 'player:modal') {
+    const playerId = cropState.playerId;
+    const blob = dataURLtoBlob(dataURL);
+    const formData = new FormData();
+    formData.append('photo', blob, 'photo.png');
+
+    const row = document.querySelector(`.player-row[data-player-id="${playerId}"]`);
+    const img = row ? row.querySelector('.player-photo') : null;
+
+    if (currentTeamId) {
+      fetch(`/api/teams/${currentTeamId}/players/${playerId}/photo`, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && img) {
+            img.src = data.photo;
+            pendingPlayerPhotos.delete(playerId);
+            playerPhotoUrls.set(playerId, data.photo);
+          } else if (data.error === 'Jogador não encontrado') {
+            pendingPlayerPhotos.set(playerId, blob);
+            if (img) img.src = dataURL;
+          } else {
+            alert('Erro ao salvar foto: ' + (data.error || 'Erro desconhecido'));
+          }
+        })
+        .catch(err => alert('Erro ao salvar foto: ' + err.message));
+    } else {
+      pendingPlayerPhotos.set(playerId, blob);
+      if (img) img.src = dataURL;
+    }
+    closeCropModal();
+    return;
+  }
 }
 
 // Interação com o canvas: arrastar para mover
@@ -832,70 +794,6 @@ socket.on('state:resetDone', () => {
 // EVENTOS DE INPUT
 // ========================
 
-// Atualização do nome do time com debounce
-let nameTimeoutA = null;
-let nameTimeoutB = null;
-
-elements.teamNameInputA.addEventListener('input', () => {
-  clearTimeout(nameTimeoutA);
-  nameTimeoutA = setTimeout(() => updateTeamName('A'), 500);
-});
-
-elements.teamNameInputB.addEventListener('input', () => {
-  clearTimeout(nameTimeoutB);
-  nameTimeoutB = setTimeout(() => updateTeamName('B'), 500);
-});
-
-// Enter nos inputs de nome
-elements.teamNameInputA.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') updateTeamName('A');
-});
-
-elements.teamNameInputB.addEventListener('keypress', (e) => {
-  if (e.key === 'Enter') updateTeamName('B');
-});
-
-// Atualização da sigla/abreviação
-let abbrTimeoutA = null;
-let abbrTimeoutB = null;
-
-elements.teamAbbrInputA.addEventListener('input', () => {
-  clearTimeout(abbrTimeoutA);
-  abbrTimeoutA = setTimeout(() => {
-    socket.emit('team:abbreviation', { team: 'A', abbreviation: elements.teamAbbrInputA.value });
-  }, 500);
-});
-
-elements.teamAbbrInputB.addEventListener('input', () => {
-  clearTimeout(abbrTimeoutB);
-  abbrTimeoutB = setTimeout(() => {
-    socket.emit('team:abbreviation', { team: 'B', abbreviation: elements.teamAbbrInputB.value });
-  }, 500);
-});
-
-// Atualização das cores
-elements.teamColorPrimaryA.addEventListener('input', () => {
-  socket.emit('team:colors', { team: 'A', colorPrimary: elements.teamColorPrimaryA.value, colorSecondary: elements.teamColorSecondaryA.value });
-});
-
-elements.teamColorSecondaryA.addEventListener('input', () => {
-  socket.emit('team:colors', { team: 'A', colorPrimary: elements.teamColorPrimaryA.value, colorSecondary: elements.teamColorSecondaryA.value });
-});
-
-elements.teamColorPrimaryB.addEventListener('input', () => {
-  socket.emit('team:colors', { team: 'B', colorPrimary: elements.teamColorPrimaryB.value, colorSecondary: elements.teamColorSecondaryB.value });
-});
-
-elements.teamColorSecondaryB.addEventListener('input', () => {
-  socket.emit('team:colors', { team: 'B', colorPrimary: elements.teamColorPrimaryB.value, colorSecondary: elements.teamColorSecondaryB.value });
-});
-
-// Pré-jogo: salvar nome e subtítulo com debounce
-function savePreMatchDebounced() {
-  clearTimeout(preMatchTimeout);
-  preMatchTimeout = setTimeout(() => savePreMatch(), 300);
-}
-
 // ========================
 // GERENCIAR TIMES
 // ========================
@@ -903,6 +801,7 @@ function savePreMatchDebounced() {
 let currentTeamId = null;
 let pendingLogoFile = null;
 let pendingPlayerPhotos = new Map();
+let playerPhotoUrls = new Map();
 
 function loadTeams() {
   fetch('/api/teams')
@@ -960,9 +859,12 @@ function openTeamModal(teamId = null) {
   currentTeamId = teamId;
   pendingLogoFile = null;
   pendingPlayerPhotos.clear();
+  playerPhotoUrls.clear();
   elements.teamForm.reset();
   elements.teamLogoPreview.innerHTML = '';
   elements.teamLogoData.value = '';
+  elements.teamColorPrimary.value = '#000000';
+  elements.teamColorSecondary.value = '#ffffff';
 
   if (teamId) {
     elements.teamModalTitle.textContent = 'Editar Time';
@@ -972,11 +874,17 @@ function openTeamModal(teamId = null) {
         elements.teamId.value = team.id;
         elements.teamName.value = team.name;
         elements.teamAbbr.value = team.abbreviation;
+        elements.teamColorPrimary.value = team.colorPrimary || '#000000';
+        elements.teamColorSecondary.value = team.colorSecondary || '#ffffff';
         if (team.logo) {
           elements.teamLogoPreview.innerHTML = `<img src="${team.logo}" alt="Escudo">`;
           elements.teamLogoData.value = team.logo;
         }
-        renderPlayers(team.players || []);
+        const players = (team.players || []).map(p => ({ ...p }));
+        players.forEach(p => {
+          if (p.photo) playerPhotoUrls.set(p.id, p.photo);
+        });
+        renderPlayers(players);
       });
   } else {
     elements.teamModalTitle.textContent = 'Novo Time';
@@ -990,6 +898,9 @@ function openTeamModal(teamId = null) {
 function closeTeamModal() {
   elements.teamModal.classList.add('hidden');
   currentTeamId = null;
+  pendingLogoFile = null;
+  pendingPlayerPhotos.clear();
+  playerPhotoUrls.clear();
 }
 
 function renderPlayers(players) {
@@ -999,13 +910,14 @@ function renderPlayers(players) {
   players.forEach((player, index) => {
     const row = document.createElement('div');
     row.className = 'player-row';
-    row.dataset.playerId = player.id || '';
+    const pid = player.id || uuidv4();
+    row.dataset.playerId = pid;
 
     const photoInput = document.createElement('input');
     photoInput.type = 'file';
     photoInput.accept = '.png,.jpg,.jpeg,.svg';
     photoInput.style.display = 'none';
-    photoInput.onchange = () => triggerPlayerPhotoUpload(player.id || uuidv4(), photoInput);
+    photoInput.onchange = () => triggerPlayerPhotoUpload(pid, photoInput);
 
     const photo = document.createElement('img');
     photo.className = 'player-photo';
@@ -1014,6 +926,9 @@ function renderPlayers(players) {
     photo.style.cursor = 'pointer';
     photo.title = 'Clique para alterar a foto';
     photo.onclick = () => photoInput.click();
+    photo.onerror = () => {
+      photo.src = 'https://via.placeholder.com/36?text=?';
+    };
 
     const nameInput = document.createElement('input');
     nameInput.type = 'text';
@@ -1062,6 +977,7 @@ function addPlayerRow() {
   row.className = 'player-row';
 
   const playerId = uuidv4();
+  row.dataset.playerId = playerId;
 
   const photoInput = document.createElement('input');
   photoInput.type = 'file';
@@ -1114,6 +1030,17 @@ function addPlayerRow() {
   elements.playersList.appendChild(row);
 }
 
+function dataURLtoBlob(dataURL) {
+  const parts = dataURL.split(',');
+  const mime = parts[0].match(/:(.*?);/)[1];
+  const b64 = atob(parts[1]);
+  const arr = new Uint8Array(b64.length);
+  for (let i = 0; i < b64.length; i++) {
+    arr[i] = b64.charCodeAt(i);
+  }
+  return new Blob([arr], { type: mime });
+}
+
 function uploadTeamLogo() {
   const input = elements.teamLogoInput;
   const file = input.files[0];
@@ -1133,11 +1060,7 @@ function uploadTeamLogo() {
   }
 
   pendingLogoFile = file;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    elements.teamLogoPreview.innerHTML = `<img src="${e.target.result}" alt="Escudo">`;
-  };
-  reader.readAsDataURL(file);
+  openCropModal(file, 'team:modal', { teamId: currentTeamId });
   input.value = '';
 }
 
@@ -1156,30 +1079,33 @@ function saveTeam(event) {
   const playerRows = elements.playersList.querySelectorAll('.player-row');
   const players = [];
   playerRows.forEach(row => {
-    const inputs = row.querySelectorAll('input');
+    // inputs[0..2] = nome, apelido, número (o input de arquivo da foto fica de fora)
+    const inputs = row.querySelectorAll('input[type="text"]');
     const select = row.querySelector('select');
     const playerName = inputs[0].value.trim();
     if (!playerName) return;
 
     const existingId = row.dataset.playerId;
+    const photoUrl = playerPhotoUrls.get(existingId) || null;
     players.push({
       id: existingId || uuidv4(),
       name: playerName,
       nickname: inputs[1].value.trim(),
       number: inputs[2].value.trim(),
       position: select.value,
-      photo: null
+      photo: photoUrl
     });
   });
 
-  const payload = { name, abbreviation, players };
+  const payload = { name, abbreviation, players, colorPrimary: elements.teamColorPrimary.value, colorSecondary: elements.teamColorSecondary.value };
 
   function doUploads(teamId) {
     const promises = [];
 
     if (pendingLogoFile) {
       const formData = new FormData();
-      formData.append('logo', pendingLogoFile);
+      const logoName = pendingLogoFile.name || 'logo.png';
+      formData.append('logo', pendingLogoFile, logoName);
       promises.push(
         fetch(`/api/teams/${teamId}/logo`, { method: 'POST', body: formData })
           .then(res => res.json())
@@ -1198,10 +1124,16 @@ function saveTeam(event) {
 
     pendingPlayerPhotos.forEach((file, playerId) => {
       const formData = new FormData();
-      formData.append('photo', file);
+      const photoName = file.name || 'photo.png';
+      formData.append('photo', file, photoName);
       promises.push(
         fetch(`/api/teams/${teamId}/players/${playerId}/photo`, { method: 'POST', body: formData })
           .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              playerPhotoUrls.set(playerId, data.photo);
+            }
+          })
       );
     });
 
@@ -1228,7 +1160,10 @@ function saveTeam(event) {
       body: JSON.stringify(payload)
     })
     .then(res => res.json())
-    .then(team => doUploads(team.id))
+    .then(team => {
+      currentTeamId = team.id;
+      return doUploads(team.id);
+    })
     .then(() => {
       closeTeamModal();
       loadTeams();
@@ -1269,25 +1204,55 @@ function populateTeamSelects() {
           select.appendChild(opt);
         });
       });
+
+      // Restaura seleção a partir do estado e re-emite dados do time
+      // (sincroniza nome, sigla, cores e escudo com o banco de dados)
+      fetch('/api/state')
+        .then(res => res.json())
+        .then(state => {
+          ['A', 'B'].forEach(side => {
+            const teamState = side === 'A' ? state.teamA : state.teamB;
+            const teamId = teamState && teamState.teamId;
+            if (!teamId) return;
+            const select = document.getElementById(`teamSelect${side}`);
+            if (select && [...select.options].some(o => o.value === teamId)) {
+              select.value = teamId;
+              loadTeamFromDB(side, teamId);
+            }
+          });
+        })
+        .catch(() => {});
     });
 }
 
 function loadTeamFromDB(side, teamId) {
-  if (!teamId) return;
+  const preview = document.getElementById(`teamPreview${side}`);
+  if (!teamId) {
+    preview.innerHTML = '<div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>';
+    return;
+  }
+
   fetch(`/api/teams/${teamId}`)
     .then(res => res.json())
     .then(team => {
-      document.getElementById(`teamNameInput${side}`).value = team.name;
-      document.getElementById(`teamAbbrInput${side}`).value = team.abbreviation;
-      document.getElementById(`teamColorPrimary${side}`).value = team.colorPrimary || '#000000';
-      document.getElementById(`teamColorSecondary${side}`).value = team.colorSecondary || '#000000';
+      preview.innerHTML = `
+        <div class="team-preview-content">
+          <img src="${team.logo || 'https://via.placeholder.com/48?text=TIM'}" alt="Escudo" class="team-preview-logo">
+          <div class="team-preview-info">
+            <strong>${team.name}</strong>
+            <span class="team-preview-abbr">${team.abbreviation}</span>
+            <div class="team-preview-colors">
+              <span class="color-swatch" style="background: ${team.colorPrimary || '#000000'}"></span>
+              <span class="color-swatch" style="background: ${team.colorSecondary || '#ffffff'}"></span>
+            </div>
+          </div>
+        </div>
+      `;
 
-      const preview = document.getElementById(`logoPreview${side}`);
-      if (team.logo) {
-        preview.innerHTML = `<img src="${team.logo}" alt="Escudo">`;
-      } else {
-        preview.innerHTML = '';
-      }
+      socket.emit('team:update', { team: side, name: team.name, teamId: team.id });
+      socket.emit('team:abbreviation', { team: side, abbreviation: team.abbreviation });
+      socket.emit('team:colors', { team: side, colorPrimary: team.colorPrimary || '#000000', colorSecondary: team.colorSecondary || '#ffffff' });
+      socket.emit('team:logo', { team: side, logo: team.logo || null });
     })
     .catch(err => alert('Erro ao carregar time: ' + err.message));
 }
@@ -1310,13 +1275,7 @@ function triggerPlayerPhotoUpload(playerId, input) {
   }
 
   pendingPlayerPhotos.set(playerId, file);
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const row = input.closest('.player-row');
-    const img = row.querySelector('.player-photo');
-    if (img) img.src = e.target.result;
-  };
-  reader.readAsDataURL(file);
+  openCropModal(file, 'player:modal', { teamId: currentTeamId, playerId });
   input.value = '';
 }
 

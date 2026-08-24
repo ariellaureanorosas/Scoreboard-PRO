@@ -508,6 +508,77 @@ body {
   font-size: 12px;
 }
 
+.team-preview {
+  width: 100%;
+  min-height: 64px;
+  border: 1px solid #0f3460;
+  border-radius: 8px;
+  background: #1a1a2e;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  margin-top: 8px;
+}
+
+.team-preview-placeholder {
+  color: #666688;
+  font-size: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.team-preview-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.team-preview-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #2a2a2a;
+  flex-shrink: 0;
+}
+
+.team-preview-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.team-preview-info strong {
+  font-size: 14px;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.team-preview-abbr {
+  font-size: 12px;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.team-preview-colors {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.color-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid #0f3460;
+  display: inline-block;
+}
+
 /* ============================================
    ABBREVIATION & COLOR INPUTS
    ============================================ */
@@ -682,7 +753,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 2000;
+  z-index: 4000;
 }
 
 .crop-modal.hidden {

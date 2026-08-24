@@ -139,6 +139,28 @@ const upload = multer({
   }
 });
 
+const playerStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, PLAYERS_DIR),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    cb(null, `${uuidv4()}${ext}`);
+  }
+});
+
+const playerUpload = multer({
+  storage: playerStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  fileFilter: (req, file, cb) => {
+    const allowed = ['.png', '.jpg', '.jpeg', '.svg'];
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (allowed.includes(ext)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Tipo de arquivo não permitido. Use PNG, JPG ou SVG.'));
+    }
+  }
+});
+
 // Middleware
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.json({ limit: '15mb' }));
@@ -342,7 +364,7 @@ app.get('/api/teams/:id', (req, res) => {
 
 // Criar time
 app.post('/api/teams', express.json({ limit: '10mb' }), (req, res) => {
-  const { name, abbreviation, players } = req.body;
+  const { name, abbreviation, players, colorPrimary, colorSecondary } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Nome do time é obrigatório' });
   }
@@ -352,6 +374,8 @@ app.post('/api/teams', express.json({ limit: '10mb' }), (req, res) => {
     name: name.trim(),
     abbreviation: (abbreviation || '').trim().slice(0, 4).toUpperCase() || 'TIM',
     logo: null,
+    colorPrimary: colorPrimary || '#000000',
+    colorSecondary: colorSecondary || '#ffffff',
     players: Array.isArray(players) ? players : []
   };
 
@@ -365,7 +389,7 @@ app.put('/api/teams/:id', express.json({ limit: '10mb' }), (req, res) => {
   const idx = teamsDB.teams.findIndex(t => t.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Time não encontrado' });
 
-  const { name, abbreviation, players } = req.body;
+  const { name, abbreviation, players, colorPrimary, colorSecondary } = req.body;
   if (!name || !name.trim()) {
     return res.status(400).json({ error: 'Nome do time é obrigatório' });
   }
@@ -374,7 +398,7 @@ app.put('/api/teams/:id', express.json({ limit: '10mb' }), (req, res) => {
     const oldPlayer = teamsDB.teams[idx].players.find(p => p.id === newPlayer.id);
     return {
       ...newPlayer,
-      photo: oldPlayer ? oldPlayer.photo : null
+      photo: newPlayer.photo ? newPlayer.photo : (oldPlayer ? oldPlayer.photo : null)
     };
   });
 
@@ -382,6 +406,8 @@ app.put('/api/teams/:id', express.json({ limit: '10mb' }), (req, res) => {
     ...teamsDB.teams[idx],
     name: name.trim(),
     abbreviation: (abbreviation || '').trim().slice(0, 4).toUpperCase() || 'TIM',
+    colorPrimary: colorPrimary || teamsDB.teams[idx].colorPrimary || '#000000',
+    colorSecondary: colorSecondary || teamsDB.teams[idx].colorSecondary || '#ffffff',
     players: mergedPlayers
   };
 
@@ -447,7 +473,7 @@ app.delete('/api/teams/:id/logo', (req, res) => {
 });
 
 // Upload foto de jogador
-app.post('/api/teams/:id/players/:playerId/photo', upload.single('photo'), (req, res) => {
+app.post('/api/teams/:id/players/:playerId/photo', playerUpload.single('photo'), (req, res) => {
   const team = teamsDB.teams.find(t => t.id === req.params.id);
   if (!team) return res.status(404).json({ error: 'Time não encontrado' });
   const player = team.players.find(p => p.id === req.params.playerId);
@@ -595,10 +621,11 @@ io.on('connection', (socket) => {
 
   // ---- TEAM INFO ----
   socket.on('team:update', (data) => {
-    const { team, name } = data;
+    const { team, name, teamId } = data;
     const teamKey = team === 'A' ? 'teamA' : 'teamB';
     if (typeof name === 'string' && name.trim()) {
       gameState[teamKey].name = name.trim();
+      gameState[teamKey].teamId = teamId || null;
       saveState();
       io.emit('state:sync', gameState);
     }
@@ -621,6 +648,14 @@ io.on('connection', (socket) => {
     const teamKey = team === 'A' ? 'teamA' : 'teamB';
     if (colorPrimary) gameState[teamKey].colorPrimary = colorPrimary;
     if (colorSecondary) gameState[teamKey].colorSecondary = colorSecondary;
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  socket.on('team:logo', (data) => {
+    const { team, logo } = data;
+    const teamKey = team === 'A' ? 'teamA' : 'teamB';
+    gameState[teamKey].logo = logo || null;
     saveState();
     io.emit('state:sync', gameState);
   });

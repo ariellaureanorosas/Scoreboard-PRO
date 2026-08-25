@@ -331,7 +331,7 @@ function renderEvents(state) {
     let suffix = '';
     if (ev.minute) suffix += ` ${ev.minute}'`;
     if (ev.type && ev.type !== 'normal') suffix += ` (${ev.type === 'penalty' ? 'P' : ev.type === 'own' ? 'GC' : ev.type.toUpperCase()})`;
-    if (ev.goalsInMatchAtThisPoint > 1) suffix += ` (${ev.goalsInMatchAtThisPoint}º)`;
+    if (ev.goalsInMatchAtThisPoint > 1) suffix += ` (${ev.goalsInMatchAtThisPoint})`;
     
     name.textContent = displayName.toUpperCase() + suffix;
 

@@ -173,7 +173,7 @@ function updateGoalScorers(state) {
     let text = (ev.playerNickname || ev.name || 'GOL').toUpperCase();
     if (ev.minute) text += ` ${ev.minute}'`;
     if (ev.type && ev.type !== 'normal') text += ` (${ev.type === 'penalty' ? 'P' : ev.type === 'own' ? 'GC' : ev.type.toUpperCase()})`;
-    if (ev.goalsInMatchAtThisPoint > 1) text += ` ${ev.goalsInMatchAtThisPoint}º`;
+    if (ev.goalsInMatchAtThisPoint > 1) text += ` (${ev.goalsInMatchAtThisPoint})`;
     return text;
   };
   
@@ -198,7 +198,7 @@ function showGoalScorerAnimation(event) {
   let text = 'GOL!';
   if (event.minute) text += ` ${event.minute}'`;
   if (event.type && event.type !== 'normal') text += ` (${event.type === 'penalty' ? 'PÊNALTI' : event.type === 'own' ? 'GOL CONTRA' : event.type.toUpperCase()})`;
-  if (event.goalsInMatchAtThisPoint > 1) text += ` ${event.goalsInMatchAtThisPoint}º NA PARTIDA`;
+  if (event.goalsInMatchAtThisPoint > 1) text += ` (${event.goalsInMatchAtThisPoint}) NA PARTIDA`;
   elements.goalScorerText.textContent = text;
   
   elements.goalScorerAnimation.classList.remove('hidden');

@@ -542,7 +542,6 @@ io.on('connection', (socket) => {
 
     saveState();
     io.emit('state:sync', gameState);
-    io.emit('score:updated', { team, goals: gameState[teamKey].goals });
   });
 
   // ---- FOULS ----

@@ -877,6 +877,7 @@ socket.on('connect_error', (err) => {
 // Sincronizacao de estado
 socket.on('state:sync', (state) => {
   currentState = state;
+  updateUI(state);
   renderEvents(state);
   updatePreMatch(state);
 });

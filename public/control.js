@@ -194,6 +194,114 @@ function updateScore(team, action) {
   const teamData = currentState ? currentState[teamKey] : null;
   const players = teamData && Array.isArray(teamData.players) ? teamData.players : [];
 
+  if (players.length > 0) {
+    openGoalScorerModal(team, players);
+  } else {
+    socket.emit('goal:scored', { team, scorerName: '' });
+    
+  }
+}
+
+// ========================
+// MODAL DE ARTILHEIRO
+// ========================
+
+let goalScorerTeam = null;
+let goalScorerPlayers = [];
+
+function openGoalScorerModal(team, players) {
+  goalScorerTeam = team;
+  goalScorerPlayers = players;
+  
+  const currentMinute = currentState ? formatTime(currentState.timer.remaining) : '';
+  
+  renderGoalScorerList();
+  elements.goalScorerModal.classList.remove('hidden');
+}
+
+function closeGoalScorerModal() {
+  elements.goalScorerModal.classList.add('hidden');
+  goalScorerTeam = null;
+  goalScorerPlayers = [];
+}
+
+function renderGoalScorerList() {
+  elements.goalScorerList.innerHTML = '';
+  
+  const noScorerBtn = document.createElement('button');
+  noScorerBtn.className = 'goal-scorer-option';
+  noScorerBtn.textContent = 'Sem artilheiro definido';
+  noScorerBtn.onclick = () => {
+    socket.emit('goal:scored', {
+      team: goalScorerTeam,
+      scorerName: '',
+    });
+    
+    closeGoalScorerModal();
+  };
+  elements.goalScorerList.appendChild(noScorerBtn);
+  
+  const ownGoalBtn = document.createElement('button');
+  ownGoalBtn.className = 'goal-scorer-option';
+  ownGoalBtn.textContent = 'Gol contra';
+  ownGoalBtn.onclick = () => {
+    socket.emit('goal:scored', {
+      team: goalScorerTeam,
+      scorerName: '',
+      type: 'own'
+    });
+    
+    closeGoalScorerModal();
+  };
+  elements.goalScorerList.appendChild(ownGoalBtn);
+  
+  goalScorerPlayers.forEach(player => {
+    const btn = document.createElement('button');
+    btn.className = 'goal-scorer-option goal-scorer-player';
+    
+    const img = document.createElement('img');
+    img.src = player.photo || 'https://via.placeholder.com/40?text=?';
+    img.alt = player.nickname || player.name;
+    img.className = 'goal-scorer-photo';
+    img.onerror = () => { img.src = 'https://via.placeholder.com/40?text=?'; };
+    
+    const info = document.createElement('div');
+    info.className = 'goal-scorer-info';
+    
+    const nickname = document.createElement('div');
+    nickname.className = 'goal-scorer-nickname';
+    nickname.textContent = player.nickname || player.name || 'Sem nome';
+    
+    const position = document.createElement('div');
+    position.className = 'goal-scorer-position';
+    position.textContent = player.position || '';
+    
+    info.appendChild(nickname);
+    info.appendChild(position);
+    btn.appendChild(img);
+    btn.appendChild(info);
+    
+    btn.onclick = () => {
+      socket.emit('goal:scored', {
+        team: goalScorerTeam,
+        playerId: player.id,
+        playerNickname: player.nickname || player.name,
+        playerPhoto: player.photo || null,
+      });
+      
+      closeGoalScorerModal();
+    };
+    
+    elements.goalScorerList.appendChild(btn);
+  });
+}
+
+/**
+ * Atualiza as faltas
+ */
+function renderEvents(state) {
+  const events = Array.isArray(state.goalEvents) ? [...state.goalEvents].reverse() : [];
+  elements.eventsList.innerHTML = '';
   elements.eventsEmpty.style.display = events.length ? 'none' : 'block';
 
   events.forEach(ev => {
@@ -236,103 +344,6 @@ function updateScore(team, action) {
   });
 }
 
-// ========================
-// MODAL DE ARTILHEIRO
-// ========================
-
-let goalScorerTeam = null;
-let goalScorerPlayers = [];
-
-function openGoalScorerModal(team, players) {
-  goalScorerTeam = team;
-  goalScorerPlayers = players;
-  
-  const currentMinute = currentState ? formatTime(currentState.timer.remaining) : '';
-  
-  renderGoalScorerList();
-  elements.goalScorerModal.classList.remove('hidden');
-}
-
-function closeGoalScorerModal() {
-  elements.goalScorerModal.classList.add('hidden');
-  goalScorerTeam = null;
-  goalScorerPlayers = [];
-}
-
-function renderGoalScorerList() {
-  elements.goalScorerList.innerHTML = '';
-  
-  const noScorerBtn = document.createElement('button');
-  noScorerBtn.className = 'goal-scorer-option';
-  noScorerBtn.textContent = 'Sem artilheiro definido';
-  noScorerBtn.onclick = () => {
-    socket.emit('goal:scored', {
-      team: goalScorerTeam,
-      scorerName: '',
-    });
-    socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
-    closeGoalScorerModal();
-  };
-  elements.goalScorerList.appendChild(noScorerBtn);
-  
-  const ownGoalBtn = document.createElement('button');
-  ownGoalBtn.className = 'goal-scorer-option';
-  ownGoalBtn.textContent = 'Gol contra';
-  ownGoalBtn.onclick = () => {
-    socket.emit('goal:scored', {
-      team: goalScorerTeam,
-      scorerName: '',
-      type: 'own'
-    });
-    socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
-    closeGoalScorerModal();
-  };
-  elements.goalScorerList.appendChild(ownGoalBtn);
-  
-  goalScorerPlayers.forEach(player => {
-    const btn = document.createElement('button');
-    btn.className = 'goal-scorer-option goal-scorer-player';
-    
-    const img = document.createElement('img');
-    img.src = player.photo || 'https://via.placeholder.com/40?text=?';
-    img.alt = player.nickname || player.name;
-    img.className = 'goal-scorer-photo';
-    img.onerror = () => { img.src = 'https://via.placeholder.com/40?text=?'; };
-    
-    const info = document.createElement('div');
-    info.className = 'goal-scorer-info';
-    
-    const nickname = document.createElement('div');
-    nickname.className = 'goal-scorer-nickname';
-    nickname.textContent = player.nickname || player.name || 'Sem nome';
-    
-    const position = document.createElement('div');
-    position.className = 'goal-scorer-position';
-    position.textContent = player.position || '';
-    
-    info.appendChild(nickname);
-    info.appendChild(position);
-    btn.appendChild(img);
-    btn.appendChild(info);
-    
-    btn.onclick = () => {
-      socket.emit('goal:scored', {
-        team: goalScorerTeam,
-        playerId: player.id,
-        playerNickname: player.nickname || player.name,
-        playerPhoto: player.photo || null,
-      });
-      socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
-      closeGoalScorerModal();
-    };
-    
-    elements.goalScorerList.appendChild(btn);
-  });
-}
-
-/**
- * Atualiza as faltas
- */
 function updateFouls(team, action) {
   socket.emit('fouls:update', { team, action });
 }
@@ -836,7 +847,6 @@ function resetAll() {
 
 // Conexao
 socket.on('connect', () => {
-  console.log('Conectado ao servidor');
   elements.connectionStatus.classList.add('connected');
   elements.connectionStatus.classList.remove('error');
   elements.connectionStatus.querySelector('.status-text').textContent = 'Conectado';
@@ -847,7 +857,6 @@ socket.on('connect', () => {
 
 // Desconexao
 socket.on('disconnect', () => {
-  console.log('Desconectado do servidor');
   elements.connectionStatus.classList.remove('connected');
   elements.connectionStatus.classList.add('error');
   elements.connectionStatus.querySelector('.status-text').textContent = 'Desconectado';
@@ -1359,7 +1368,6 @@ function loadTeamFromDB(side, teamId) {
       socket.emit('team:logo', { team: side, logo: team.logo || null });
       
       const players = (team.players || []).map(p => ({ ...p, goalsInMatch: 0 }));
-      console.log('[loadTeamFromDB] side=', side, 'teamId=', teamId, 'players count=', players.length);
       socket.emit('team:players', { team: side, players });
     })
     .catch(err => {

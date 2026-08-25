@@ -248,8 +248,6 @@ function openGoalScorerModal(team, players) {
   goalScorerPlayers = players;
   
   const currentMinute = currentState ? formatTime(currentState.timer.remaining) : '';
-  elements.goalMinute.value = currentMinute;
-  elements.goalType.value = 'normal';
   
   renderGoalScorerList();
   elements.goalScorerModal.classList.remove('hidden');
@@ -271,8 +269,6 @@ function renderGoalScorerList() {
     socket.emit('goal:scored', {
       team: goalScorerTeam,
       scorerName: '',
-      minute: elements.goalMinute.value || null,
-      type: elements.goalType.value || 'normal'
     });
     socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
     closeGoalScorerModal();
@@ -286,7 +282,6 @@ function renderGoalScorerList() {
     socket.emit('goal:scored', {
       team: goalScorerTeam,
       scorerName: '',
-      minute: elements.goalMinute.value || null,
       type: 'own'
     });
     socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
@@ -326,8 +321,6 @@ function renderGoalScorerList() {
         playerId: player.id,
         playerNickname: player.nickname || player.name,
         playerPhoto: player.photo || null,
-        minute: elements.goalMinute.value || null,
-        type: elements.goalType.value || 'normal'
       });
       socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
       closeGoalScorerModal();

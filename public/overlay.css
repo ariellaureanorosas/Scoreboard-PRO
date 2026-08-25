@@ -618,7 +618,7 @@ html, body {
 /* ==================== ANIMAÇÃO DE ARTILHEIRO ==================== */
 .goal-scorer-animation {
   position: fixed;
-  top: 100px;
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2000;

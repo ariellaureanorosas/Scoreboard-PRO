@@ -194,17 +194,6 @@ function updateScore(team, action) {
   const teamData = currentState ? currentState[teamKey] : null;
   const players = teamData && Array.isArray(teamData.players) ? teamData.players : [];
 
-  if (players.length > 0) {
-    openGoalScorerModal(team, players);
-  } else {
-    socket.emit('goal:scored', { team, scorerName: '' });
-    socket.emit('expandedMode:show', { autoHide: true, seconds: parseInt(elements.expandedAutoHideSeconds.value) || 10 });
-  }
-}
-
-function renderEvents(state) {
-  const events = Array.isArray(state.goalEvents) ? [...state.goalEvents].reverse() : [];
-  elements.eventsList.innerHTML = '';
   elements.eventsEmpty.style.display = events.length ? 'none' : 'block';
 
   events.forEach(ev => {
@@ -882,7 +871,6 @@ socket.on('connect_error', (err) => {
 // Sincronizacao de estado
 socket.on('state:sync', (state) => {
   currentState = state;
-  updateUI(state);
   renderEvents(state);
   updatePreMatch(state);
 });
@@ -1348,11 +1336,15 @@ function loadTeamFromDB(side, teamId) {
   const preview = document.getElementById(`teamPreview${side}`);
   if (!teamId) {
     preview.innerHTML = '<div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>';
+    socket.emit('team:players', { team: side, players: [] });
     return;
   }
 
   fetch(`/api/teams/${teamId}`)
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok) throw new Error('Time não encontrado');
+      return res.json();
+    })
     .then(team => {
       preview.innerHTML = `
         <div class="team-preview-content">
@@ -1372,9 +1364,17 @@ function loadTeamFromDB(side, teamId) {
       socket.emit('team:abbreviation', { team: side, abbreviation: team.abbreviation });
       socket.emit('team:colors', { team: side, colorPrimary: team.colorPrimary || '#000000', colorSecondary: team.colorSecondary || '#ffffff' });
       socket.emit('team:logo', { team: side, logo: team.logo || null });
-      socket.emit('team:players', { team: side, players: (team.players || []).map(p => ({ ...p, goalsInMatch: 0 })) });
+      
+      const players = (team.players || []).map(p => ({ ...p, goalsInMatch: 0 }));
+      console.log('[loadTeamFromDB] side=', side, 'teamId=', teamId, 'players count=', players.length);
+      socket.emit('team:players', { team: side, players });
     })
-    .catch(err => alert('Erro ao carregar time: ' + err.message));
+    .catch(err => {
+      console.error('Erro ao carregar time:', err);
+      alert('Erro ao carregar time: ' + err.message);
+      preview.innerHTML = '<div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>';
+      socket.emit('team:players', { team: side, players: [] });
+    });
 }
 
 function triggerPlayerPhotoUpload(playerId, input) {

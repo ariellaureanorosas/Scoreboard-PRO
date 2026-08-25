@@ -670,6 +670,7 @@ io.on('connection', (socket) => {
   socket.on('team:players', (data) => {
     const { team, players } = data;
     const teamKey = team === 'A' ? 'teamA' : 'teamB';
+    console.log('[team:players] team=', team, 'players count=', Array.isArray(players) ? players.length : 'not array');
     if (Array.isArray(players)) {
       gameState[teamKey].players = players.map(p => ({
         ...p,

@@ -27,9 +27,6 @@
               <div class="button-group">
                 <button class="btn btn-goal" onclick="updateScore('A', 'increment')">+1 Gol</button>
               </div>
-              <div class="goal-info-fields">
-                <input type="text" id="goalScorerA" placeholder="Artilheiro" maxlength="30">
-              </div>
           </div>
           <div class="vs">VS</div>
           <div class="team-controls">
@@ -37,9 +34,6 @@
             <div class="score-display" id="scoreDisplayB">0</div>
               <div class="button-group">
                 <button class="btn btn-goal" onclick="updateScore('B', 'increment')">+1 Gol</button>
-              </div>
-              <div class="goal-info-fields">
-                <input type="text" id="goalScorerB" placeholder="Artilheiro" maxlength="30">
               </div>
           </div>
         </div>
@@ -266,14 +260,6 @@
     <div class="goal-scorer-modal-content">
       <h3>Quem marcou o gol?</h3>
       <div class="goal-scorer-options">
-        <div class="goal-scorer-meta">
-          <input type="text" id="goalMinute" placeholder="Minuto (ex: 17)" maxlength="5">
-          <select id="goalType">
-            <option value="normal">Normal</option>
-            <option value="penalty">Pênalti</option>
-            <option value="own">Gol contra</option>
-          </select>
-        </div>
         <div id="goalScorerList" class="goal-scorer-list"></div>
       </div>
       <div class="goal-scorer-modal-actions">

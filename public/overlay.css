@@ -615,5 +615,73 @@ html, body {
   text-overflow: unset;
 }
 
+/* ==================== ANIMAÇÃO DE ARTILHEIRO ==================== */
+.goal-scorer-animation {
+  position: fixed;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  transform: translateX(-50%) translateY(20px);
+}
+
+.goal-scorer-animation.visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.goal-scorer-animation.hidden {
+  display: none;
+}
+
+.goal-scorer-animation-content {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 12px 20px;
+  backdrop-filter: blur(8px);
+}
+
+.goal-scorer-animation-photo {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: #2a2a2a;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.goal-scorer-animation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.goal-scorer-animation-name {
+  font-family: var(--font-main);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+.goal-scorer-animation-text {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  color: #00cc66;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
 
 

@@ -8,6 +8,7 @@ const socket = io();
 
 let expandedAutoHideTimer = null;
 let previousState = null;
+let goalScorerTimer = null;
 
 const elements = {
   // Modo compacto
@@ -44,7 +45,12 @@ const elements = {
   preMatchCompetitionName: document.getElementById('preMatchCompetitionName'),
   preMatchCompetitionSubtitle: document.getElementById('preMatchCompetitionSubtitle'),
   preMatchTeamNameA: document.getElementById('preMatchTeamNameA'),
-  preMatchTeamNameB: document.getElementById('preMatchTeamNameB')
+  preMatchTeamNameB: document.getElementById('preMatchTeamNameB'),
+  // Animação de artilheiro
+  goalScorerAnimation: document.getElementById('goalScorerAnimation'),
+  goalScorerPhoto: document.getElementById('goalScorerPhoto'),
+  goalScorerName: document.getElementById('goalScorerName'),
+  goalScorerText: document.getElementById('goalScorerText')
 };
 
 function formatTime(seconds) {
@@ -159,18 +165,52 @@ function updatePreMatch(state) {
 
 function updateGoalScorers(state) {
   const events = Array.isArray(state.goalEvents) ? state.goalEvents : [];
-  const agg = { A: new Map(), B: new Map() };
-  events.forEach(ev => {
-    if ((ev.team !== 'A' && ev.team !== 'B') || !ev.name) return;
-    const map = agg[ev.team];
-    map.set(ev.name, (map.get(ev.name) || 0) + 1);
-  });
-  const fmt = map => Array.from(map.entries())
-    .map(([name, n]) => n >= 2 ? `${name.toUpperCase()} - ${n}` : name.toUpperCase())
-    .join(', ');
-  elements.scorersTextA.textContent = fmt(agg.A);
-  elements.scorersTextB.textContent = fmt(agg.B);
+  const lastA = events.filter(e => e.team === 'A').pop();
+  const lastB = events.filter(e => e.team === 'B').pop();
+  
+  const fmt = (ev) => {
+    if (!ev) return '';
+    let text = (ev.playerNickname || ev.name || 'GOL').toUpperCase();
+    if (ev.minute) text += ` ${ev.minute}'`;
+    if (ev.type && ev.type !== 'normal') text += ` (${ev.type === 'penalty' ? 'P' : ev.type === 'own' ? 'GC' : ev.type.toUpperCase()})`;
+    if (ev.goalsInMatchAtThisPoint > 1) text += ` ${ev.goalsInMatchAtThisPoint}º`;
+    return text;
+  };
+  
+  const textA = fmt(lastA);
+  const textB = fmt(lastB);
+  
+  elements.scorersTextA.textContent = textA;
+  elements.scorersTextB.textContent = textB;
   elements.expandedGoalInfo.classList.toggle('hidden', events.length === 0);
+}
+
+function showGoalScorerAnimation(event) {
+  clearTimeout(goalScorerTimer);
+  
+  if (!event.playerNickname) return;
+  
+  const teamColor = event.team === 'A' ? (previousState && previousState.teamA.colorPrimary) : (previousState && previousState.teamB.colorPrimary);
+  
+  elements.goalScorerPhoto.src = event.playerPhoto || 'https://via.placeholder.com/56?text=?';
+  elements.goalScorerName.textContent = (event.playerNickname || 'GOL').toUpperCase();
+  
+  let text = 'GOL!';
+  if (event.minute) text += ` ${event.minute}'`;
+  if (event.type && event.type !== 'normal') text += ` (${event.type === 'penalty' ? 'PÊNALTI' : event.type === 'own' ? 'GOL CONTRA' : event.type.toUpperCase()})`;
+  if (event.goalsInMatchAtThisPoint > 1) text += ` ${event.goalsInMatchAtThisPoint}º NA PARTIDA`;
+  elements.goalScorerText.textContent = text;
+  
+  elements.goalScorerAnimation.classList.remove('hidden');
+  void elements.goalScorerAnimation.offsetWidth;
+  elements.goalScorerAnimation.classList.add('visible');
+  
+  goalScorerTimer = setTimeout(() => {
+    elements.goalScorerAnimation.classList.remove('visible');
+    setTimeout(() => {
+      elements.goalScorerAnimation.classList.add('hidden');
+    }, 400);
+  }, 4500);
 }
 
 function updateExpandedMode(state) {
@@ -225,6 +265,14 @@ socket.on('connect', () => {
 socket.on('state:sync', (state) => {
   const wasExpanded = previousState ? previousState.expandedMode : false;
   renderState(state);
+
+  // Detecta gol novo para animação
+  if (previousState && state.goalEvents && previousState.goalEvents) {
+    if (state.goalEvents.length > previousState.goalEvents.length) {
+      const lastEvent = state.goalEvents[state.goalEvents.length - 1];
+      showGoalScorerAnimation(lastEvent);
+    }
+  }
 
   // Auto-hide: se modo expandido foi ativado por gol (autoHide=true)
   if (state.expandedMode && state.expandedAutoHide && !wasExpanded) {

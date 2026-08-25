@@ -261,6 +261,27 @@
     </div>
   </div>
 
+  <!-- Modal de seleção de artilheiro -->
+  <div id="goalScorerModal" class="goal-scorer-modal hidden">
+    <div class="goal-scorer-modal-content">
+      <h3>Quem marcou o gol?</h3>
+      <div class="goal-scorer-options">
+        <div class="goal-scorer-meta">
+          <input type="text" id="goalMinute" placeholder="Minuto (ex: 17)" maxlength="5">
+          <select id="goalType">
+            <option value="normal">Normal</option>
+            <option value="penalty">Pênalti</option>
+            <option value="own">Gol contra</option>
+          </select>
+        </div>
+        <div id="goalScorerList" class="goal-scorer-list"></div>
+      </div>
+      <div class="goal-scorer-modal-actions">
+        <button type="button" class="btn btn-remove" onclick="closeGoalScorerModal()">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="control.js"></script>
 </body>

@@ -22,8 +22,8 @@ const PLAYERS_DIR = path.join(__dirname, 'public', 'assets', 'players');
 
 // Estado padrão do jogo
 const DEFAULT_STATE = {
-  teamA: { name: 'Time A', abbreviation: 'TIM', logo: null, goals: 0, fouls: 0, directFouls: 0, colorPrimary: '#000000', colorSecondary: '#ffffff' },
-  teamB: { name: 'Time B', abbreviation: 'TIM', logo: null, goals: 0, fouls: 0, directFouls: 0, colorPrimary: '#e51937', colorSecondary: '#000000' },
+  teamA: { name: 'Time A', abbreviation: 'TIM', logo: null, goals: 0, fouls: 0, directFouls: 0, colorPrimary: '#000000', colorSecondary: '#ffffff', teamId: null, players: [] },
+  teamB: { name: 'Time B', abbreviation: 'TIM', logo: null, goals: 0, fouls: 0, directFouls: 0, colorPrimary: '#e51937', colorSecondary: '#000000', teamId: null, players: [] },
   timer: { duration: 1200, remaining: 1200, running: false, startedAt: null },
   showSecondaryInfo: false,
   competitionLogo: null,
@@ -57,6 +57,12 @@ function loadState() {
         }
         // Compatibilidade com state.json antigo (sem lista de eventos)
         if (!Array.isArray(parsed.goalEvents)) parsed.goalEvents = [];
+        // Compatibilidade com state.json antigo (sem jogadores/teamId)
+        ['teamA', 'teamB'].forEach(key => {
+          if (!parsed[key]) return;
+          if (!Array.isArray(parsed[key].players)) parsed[key].players = [];
+          if (typeof parsed[key].teamId !== 'string') parsed[key].teamId = null;
+        });
         // Remove chaves obsoletas de versões anteriores
         delete parsed.goalScorers;
         delete parsed.period;
@@ -72,7 +78,7 @@ function loadState() {
   } catch (err) {
     console.error('Erro ao ler state.json, criando novo estado:', err.message);
   }
-  return { ...DEFAULT_STATE };
+  return JSON.parse(JSON.stringify(DEFAULT_STATE));
 }
 
 // Salva estado no arquivo
@@ -531,6 +537,7 @@ io.on('connection', (socket) => {
     } else if (action === 'reset') {
       gameState[teamKey].goals = 0;
       gameState.goalEvents = gameState.goalEvents.filter(e => e.team !== team);
+      gameState[teamKey].players.forEach(p => p.goalsInMatch = 0);
     }
 
     saveState();
@@ -660,6 +667,19 @@ io.on('connection', (socket) => {
     io.emit('state:sync', gameState);
   });
 
+  socket.on('team:players', (data) => {
+    const { team, players } = data;
+    const teamKey = team === 'A' ? 'teamA' : 'teamB';
+    if (Array.isArray(players)) {
+      gameState[teamKey].players = players.map(p => ({
+        ...p,
+        goalsInMatch: p.goalsInMatch || 0
+      }));
+      saveState();
+      io.emit('state:sync', gameState);
+    }
+  });
+
   // ---- COMPETITION LOGO ----
   socket.on('competitionLogo:update', (data) => {
     const { logo } = data;
@@ -735,13 +755,57 @@ io.on('connection', (socket) => {
     const [removed] = gameState.goalEvents.splice(idx, 1);
     const teamKey = removed.team === 'A' ? 'teamA' : 'teamB';
     if (gameState[teamKey].goals > 0) gameState[teamKey].goals--;
+    
+    if (removed.playerId) {
+      const player = gameState[teamKey].players.find(p => p.id === removed.playerId);
+      if (player) {
+        const remainingGoals = gameState.goalEvents.filter(e => e.team === removed.team && e.playerId === removed.playerId).length;
+        player.goalsInMatch = remainingGoals;
+      }
+    }
+    
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  socket.on('goal:scored', (data) => {
+    const { team, playerId, playerNickname, playerPhoto, minute, type, scorerName } = data;
+    if ((team !== 'A' && team !== 'B')) return;
+
+    const teamKey = team === 'A' ? 'teamA' : 'teamB';
+    gameState[teamKey].goals++;
+
+    let goalsInMatchAtThisPoint = 0;
+    if (playerId && playerNickname) {
+      const player = gameState[teamKey].players.find(p => p.id === playerId);
+      if (player) {
+        player.goalsInMatch = (player.goalsInMatch || 0) + 1;
+        goalsInMatchAtThisPoint = player.goalsInMatch;
+      }
+    }
+
+    const id = gameState.goalEvents.reduce((max, e) => Math.max(max, e.id), 0) + 1;
+    gameState.goalEvents.push({
+      id,
+      team,
+      playerId: playerId || null,
+      playerNickname: playerNickname || scorerName || null,
+      playerPhoto: playerPhoto || null,
+      minute: minute || null,
+      type: type || 'normal',
+      goalsInMatchAtThisPoint
+    });
+
     saveState();
     io.emit('state:sync', gameState);
   });
 
   // ---- FULL RESET ----
   socket.on('state:reset', () => {
-    gameState = { ...DEFAULT_STATE, goalEvents: [] };
+    gameState = JSON.parse(JSON.stringify(DEFAULT_STATE));
+    gameState.goalEvents = [];
+    gameState.teamA.players = [];
+    gameState.teamB.players = [];
     // Remove logos
     const files = fs.readdirSync(LOGOS_DIR);
     files.forEach(file => {

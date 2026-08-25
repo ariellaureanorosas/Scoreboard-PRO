@@ -107,6 +107,10 @@ function formatTime(seconds) {
 function updateUI(state) {
   currentState = state;
   
+  // Placar
+  elements.scoreDisplayA.textContent = state.teamA.goals;
+  elements.scoreDisplayB.textContent = state.teamB.goals;
+
   // Nomes dos times
   elements.teamNameA.textContent = state.teamA.name;
   elements.teamNameB.textContent = state.teamB.name;

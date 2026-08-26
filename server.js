@@ -782,6 +782,8 @@ io.on('connection', (socket) => {
       goalsInMatchAtThisPoint
     });
 
+    const player = playerId ? (gameState[teamKey].players.find(p => p.id === playerId) || null) : null;
+
     saveState();
     io.emit('state:sync', gameState);
     io.emit('goalCard:show', {

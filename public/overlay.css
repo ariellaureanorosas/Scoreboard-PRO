@@ -691,6 +691,16 @@ html, body {
   line-height: 1.1;
 }
 
+.goal-card-label {
+  color: #00cc66;
+  font-weight: 700;
+}
+
+.goal-card-value {
+  color: var(--white);
+  font-weight: 700;
+}
+
 .goal-card-position {
   font-family: var(--font-main);
   font-size: 13px;

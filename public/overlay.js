@@ -197,16 +197,16 @@ function showGoalCard(event) {
   
   elements.goalCardText.textContent = 'GOOOOOL!';
   
-  elements.goalCardName.textContent = `Nome: ${(event.playerNickname || 'GOL').toUpperCase()}`;
-  elements.goalCardPosition.textContent = event.playerPosition ? `Posição: ${event.playerPosition}` : '';
+  document.getElementById('goalCardNameValue').textContent = (event.playerNickname || 'GOL').toUpperCase();
+  document.getElementById('goalCardPositionValue').textContent = event.playerPosition || '';
   
   let goalCountText = '';
   if (event.goalsInMatchAtThisPoint > 1) {
-    goalCountText = `Quantidade de gols: ${event.goalsInMatchAtThisPoint}`;
+    goalCountText = event.goalsInMatchAtThisPoint;
   } else {
-    goalCountText = 'Quantidade de gols: 1';
+    goalCountText = '1';
   }
-  elements.goalCardGoalCount.textContent = goalCountText;
+  document.getElementById('goalCardGoalCountValue').textContent = goalCountText;
   
   elements.goalCard.classList.remove('hidden');
   void elements.goalCard.offsetWidth;

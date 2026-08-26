@@ -85,6 +85,7 @@ html, body {
   display: flex;
   align-items: stretch;
   height: var(--bar-height);
+  position: relative;
 }
 
 .compact-segment {
@@ -617,10 +618,10 @@ html, body {
 
 /* ==================== GOAL CARD ==================== */
 .goal-card {
-  position: fixed;
-  top: calc(var(--pos-top) + var(--bar-height) + 12px);
-  left: var(--pos-left);
-  right: var(--pos-left);
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 0;
+  right: 0;
   z-index: 2000;
   pointer-events: none;
   opacity: 0;
@@ -631,8 +632,6 @@ html, body {
   border-radius: 12px;
   backdrop-filter: blur(8px);
   overflow: hidden;
-  width: fit-content;
-  max-width: 100%;
 }
 
 .goal-card.visible {

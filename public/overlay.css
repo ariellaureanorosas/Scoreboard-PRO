@@ -619,8 +619,9 @@ html, body {
 .goal-card {
   position: absolute;
   top: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%) translateY(20px);
+  left: 0;
+  right: 0;
+  transform: translateY(20px);
   z-index: 2000;
   pointer-events: none;
   opacity: 0;
@@ -631,11 +632,14 @@ html, body {
   border-radius: 12px;
   backdrop-filter: blur(8px);
   overflow: hidden;
+  margin: 0 auto;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .goal-card.visible {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateY(0);
 }
 
 .goal-card.hidden {

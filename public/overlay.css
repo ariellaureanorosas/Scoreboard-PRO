@@ -673,11 +673,11 @@ html, body {
 
 .goal-card-text {
   font-family: var(--font-main);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 700;
   color: #00cc66;
   text-transform: uppercase;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   line-height: 1;
 }
 
@@ -696,6 +696,16 @@ html, body {
   font-size: 13px;
   font-weight: 600;
   color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.goal-card-goal-count {
+  font-family: var(--font-main);
+  font-size: 13px;
+  font-weight: 600;
+  color: #00cc66;
   text-transform: uppercase;
   letter-spacing: 1px;
   line-height: 1;

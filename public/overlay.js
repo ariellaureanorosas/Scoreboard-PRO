@@ -49,6 +49,7 @@ const elements = {
   goalCardPhoto: document.getElementById('goalCardPhoto'),
   goalCardName: document.getElementById('goalCardName'),
   goalCardPosition: document.getElementById('goalCardPosition'),
+  goalCardGoalCount: document.getElementById('goalCardGoalCount'),
   goalCardText: document.getElementById('goalCardText'),
   goalCardTeamStripe: document.getElementById('goalCardTeamStripe')
 };
@@ -194,12 +195,18 @@ function showGoalCard(event) {
   elements.goalCardTeamStripe.style.background = teamColor || '#000';
   elements.goalCardPhoto.src = event.playerPhoto || 'https://via.placeholder.com/56?text=?';
   
-  let goalText = 'GOL!';
-  if (event.goalsInMatchAtThisPoint > 1) goalText += ` (${event.goalsInMatchAtThisPoint})`;
-  elements.goalCardText.textContent = goalText;
+  elements.goalCardText.textContent = 'GOOOOOL!';
   
   elements.goalCardName.textContent = (event.playerNickname || 'GOL').toUpperCase();
   elements.goalCardPosition.textContent = event.playerPosition ? `Posição: ${event.playerPosition}` : '';
+  
+  let goalCountText = '';
+  if (event.goalsInMatchAtThisPoint > 1) {
+    goalCountText = `Quantidade de gols: ${event.goalsInMatchAtThisPoint}`;
+  } else {
+    goalCountText = 'Quantidade de gols: 1';
+  }
+  elements.goalCardGoalCount.textContent = goalCountText;
   
   elements.goalCard.classList.remove('hidden');
   void elements.goalCard.offsetWidth;

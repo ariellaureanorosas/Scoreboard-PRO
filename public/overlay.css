@@ -617,8 +617,8 @@ html, body {
 
 /* ==================== GOAL CARD ==================== */
 .goal-card {
-  position: fixed;
-  bottom: 80px;
+  position: absolute;
+  top: calc(100% + 12px);
   left: 50%;
   transform: translateX(-50%) translateY(20px);
   z-index: 2000;

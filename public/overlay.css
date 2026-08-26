@@ -617,11 +617,10 @@ html, body {
 
 /* ==================== GOAL CARD ==================== */
 .goal-card {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 0;
-  right: 0;
-  transform: translateY(20px);
+  position: fixed;
+  top: calc(var(--pos-top) + var(--bar-height) + 12px);
+  left: var(--pos-left);
+  right: var(--pos-left);
   z-index: 2000;
   pointer-events: none;
   opacity: 0;
@@ -632,7 +631,6 @@ html, body {
   border-radius: 12px;
   backdrop-filter: blur(8px);
   overflow: hidden;
-  margin: 0 auto;
   width: fit-content;
   max-width: 100%;
 }

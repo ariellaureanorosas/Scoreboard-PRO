@@ -263,6 +263,11 @@ socket.on('goalCard:show', (data) => {
   showGoalCard(data);
 });
 
+socket.on('scoreboard:toggle', () => {
+  elements.compact.classList.toggle('visible');
+  elements.expanded.classList.remove('visible');
+});
+
 socket.on('timer:tick', (data) => {
   updateTimer(data.remaining);
 });

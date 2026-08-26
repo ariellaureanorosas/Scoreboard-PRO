@@ -789,6 +789,7 @@ io.on('connection', (socket) => {
       playerId: playerId || null,
       playerNickname: playerNickname || scorerName || null,
       playerPhoto: playerPhoto || null,
+      playerPosition: player && player.position ? player.position : null,
       goalsInMatchAtThisPoint
     });
   });

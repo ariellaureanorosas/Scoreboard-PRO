@@ -680,6 +680,16 @@ html, body {
   line-height: 1.1;
 }
 
+.goal-card-position {
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 600;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
 .goal-card-text {
   font-family: var(--font-main);
   font-size: 14px;

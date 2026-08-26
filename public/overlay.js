@@ -49,6 +49,7 @@ const elements = {
   goalCard: document.getElementById('goalCard'),
   goalCardPhoto: document.getElementById('goalCardPhoto'),
   goalCardName: document.getElementById('goalCardName'),
+  goalCardPosition: document.getElementById('goalCardPosition'),
   goalCardText: document.getElementById('goalCardText'),
   goalCardTeamStripe: document.getElementById('goalCardTeamStripe')
 };
@@ -195,6 +196,7 @@ function showGoalCard(event) {
   elements.goalCardTeamStripe.style.background = teamColor || '#000';
   elements.goalCardPhoto.src = event.playerPhoto || 'https://via.placeholder.com/56?text=?';
   elements.goalCardName.textContent = (event.playerNickname || 'GOL').toUpperCase();
+  elements.goalCardPosition.textContent = event.playerPosition || '';
   
   let text = 'GOL!';
   if (event.goalsInMatchAtThisPoint > 1) text += ` (${event.goalsInMatchAtThisPoint})`;

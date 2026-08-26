@@ -615,40 +615,46 @@ html, body {
   text-overflow: unset;
 }
 
-/* ==================== ANIMAÇÃO DE ARTILHEIRO ==================== */
-.goal-scorer-animation {
+/* ==================== GOAL CARD ==================== */
+.goal-card {
   position: fixed;
   bottom: 80px;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(20px);
   z-index: 2000;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.4s ease, transform 0.4s ease;
-  transform: translateX(-50%) translateY(20px);
+  display: flex;
+  background: rgba(0, 0, 0, 0.85);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  overflow: hidden;
 }
 
-.goal-scorer-animation.visible {
+.goal-card.visible {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
 }
 
-.goal-scorer-animation.hidden {
+.goal-card.hidden {
   display: none;
 }
 
-.goal-scorer-animation-content {
+.goal-card-team-stripe {
+  width: 6px;
+  background: #000;
+}
+
+.goal-card-content {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: rgba(0, 0, 0, 0.85);
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  border-radius: 12px;
   padding: 12px 20px;
-  backdrop-filter: blur(8px);
 }
 
-.goal-scorer-animation-photo {
+.goal-card-photo {
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -657,13 +663,13 @@ html, body {
   border: 2px solid rgba(255, 255, 255, 0.3);
 }
 
-.goal-scorer-animation-info {
+.goal-card-info {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.goal-scorer-animation-name {
+.goal-card-name {
   font-family: var(--font-main);
   font-size: 22px;
   font-weight: 700;
@@ -673,7 +679,7 @@ html, body {
   line-height: 1.1;
 }
 
-.goal-scorer-animation-text {
+.goal-card-text {
   font-family: var(--font-main);
   font-size: 14px;
   font-weight: 600;
@@ -682,6 +688,7 @@ html, body {
   letter-spacing: 1px;
   line-height: 1;
 }
+
 
 
 

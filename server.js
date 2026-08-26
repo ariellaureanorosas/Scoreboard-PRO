@@ -28,9 +28,6 @@ const DEFAULT_STATE = {
   showSecondaryInfo: false,
   competitionLogo: null,
   expandedMode: false,
-  expandedAutoHide: true,
-  expandedAutoHideSeconds: 10,
-  goalEvents: [],
   preMatchMode: false,
   competitionName: 'COCA-COLA LEAGUE',
   competitionSubtitle: '',
@@ -698,17 +695,6 @@ io.on('connection', (socket) => {
   // ---- EXPANDED MODE TOGGLE ----
   socket.on('expandedMode:toggle', () => {
     gameState.expandedMode = !gameState.expandedMode;
-    gameState.expandedAutoHide = false; // Toggle manual desativa auto-hide
-    saveState();
-    io.emit('state:sync', gameState);
-  });
-
-  // ---- EXPANDED MODE SHOW (para auto-hide após gol) ----
-  socket.on('expandedMode:show', (data) => {
-    const { autoHide, seconds } = data;
-    gameState.expandedMode = true;
-    gameState.expandedAutoHide = autoHide !== false;
-    gameState.expandedAutoHideSeconds = seconds || 10;
     saveState();
     io.emit('state:sync', gameState);
   });
@@ -798,6 +784,13 @@ io.on('connection', (socket) => {
 
     saveState();
     io.emit('state:sync', gameState);
+    io.emit('goalCard:show', {
+      team,
+      playerId: playerId || null,
+      playerNickname: playerNickname || scorerName || null,
+      playerPhoto: playerPhoto || null,
+      goalsInMatchAtThisPoint
+    });
   });
 
   // ---- FULL RESET ----

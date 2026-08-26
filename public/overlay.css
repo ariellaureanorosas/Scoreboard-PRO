@@ -57,6 +57,7 @@ html, body {
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.35s ease, visibility 0.35s ease, transform 0.35s ease;
+  overflow: visible;
 }
 
 .scoreboard.visible {
@@ -667,7 +668,17 @@ html, body {
 .goal-card-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
+}
+
+.goal-card-text {
+  font-family: var(--font-main);
+  font-size: 16px;
+  font-weight: 700;
+  color: #00cc66;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  line-height: 1;
 }
 
 .goal-card-name {
@@ -682,19 +693,9 @@ html, body {
 
 .goal-card-position {
   font-family: var(--font-main);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: #aaa;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  line-height: 1;
-}
-
-.goal-card-text {
-  font-family: var(--font-main);
-  font-size: 14px;
-  font-weight: 600;
-  color: #00cc66;
   text-transform: uppercase;
   letter-spacing: 1px;
   line-height: 1;

@@ -7,7 +7,6 @@
 const socket = io();
 
 let previousState = null;
-let goalCardTimer = null;
 
 const elements = {
   // Modo compacto
@@ -187,7 +186,6 @@ function updateGoalScorers(state) {
 }
 
 function showGoalCard(event) {
-  clearTimeout(goalCardTimer);
   
   if (!event.playerNickname) return;
   
@@ -195,23 +193,17 @@ function showGoalCard(event) {
   
   elements.goalCardTeamStripe.style.background = teamColor || '#000';
   elements.goalCardPhoto.src = event.playerPhoto || 'https://via.placeholder.com/56?text=?';
-  elements.goalCardName.textContent = (event.playerNickname || 'GOL').toUpperCase();
-  elements.goalCardPosition.textContent = event.playerPosition || '';
   
-  let text = 'GOL!';
-  if (event.goalsInMatchAtThisPoint > 1) text += ` (${event.goalsInMatchAtThisPoint})`;
-  elements.goalCardText.textContent = text;
+  let goalText = 'GOL!';
+  if (event.goalsInMatchAtThisPoint > 1) goalText += ` (${event.goalsInMatchAtThisPoint})`;
+  elements.goalCardText.textContent = goalText;
+  
+  elements.goalCardName.textContent = (event.playerNickname || 'GOL').toUpperCase();
+  elements.goalCardPosition.textContent = event.playerPosition ? `Posição: ${event.playerPosition}` : '';
   
   elements.goalCard.classList.remove('hidden');
   void elements.goalCard.offsetWidth;
   elements.goalCard.classList.add('visible');
-  
-  goalCardTimer = setTimeout(() => {
-    elements.goalCard.classList.remove('visible');
-    setTimeout(() => {
-      elements.goalCard.classList.add('hidden');
-    }, 400);
-  }, 5000);
 }
 
 function updateExpandedMode(state) {

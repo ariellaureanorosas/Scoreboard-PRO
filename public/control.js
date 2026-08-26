@@ -398,6 +398,10 @@ function resetScore() {
   }
 }
 
+function toggleScoreboardVisibility() {
+  socket.emit('scoreboard:toggle');
+}
+
 /**
  * Alterna modo pré-jogo no overlay
  */

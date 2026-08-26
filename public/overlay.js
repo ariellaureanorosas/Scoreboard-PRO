@@ -197,7 +197,7 @@ function showGoalCard(event) {
   
   elements.goalCardText.textContent = 'GOOOOOL!';
   
-  elements.goalCardName.textContent = (event.playerNickname || 'GOL').toUpperCase();
+  elements.goalCardName.textContent = `Nome: ${(event.playerNickname || 'GOL').toUpperCase()}`;
   elements.goalCardPosition.textContent = event.playerPosition ? `Posição: ${event.playerPosition}` : '';
   
   let goalCountText = '';

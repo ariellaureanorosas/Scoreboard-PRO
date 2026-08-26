@@ -673,11 +673,11 @@ html, body {
 
 .goal-card-text {
   font-family: var(--font-main);
-  font-size: 16px;
+  font-size: 28px;
   font-weight: 700;
   color: #00cc66;
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
   line-height: 1;
 }
 

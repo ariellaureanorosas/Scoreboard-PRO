@@ -29,9 +29,13 @@ const DEFAULT_STATE = {
   competitionLogo: null,
   expandedMode: false,
   preMatchMode: false,
+  scoreboardVisible: true,
   competitionName: 'COCA-COLA LEAGUE',
   competitionSubtitle: '',
-  preMatchLogo: null
+  preMatchLogo: null,
+  expandedAutoHide: false,
+  expandedAutoHideSeconds: 10,
+  scoreboardVisible: true
 };
 
 // Carrega ou cria state.json
@@ -69,6 +73,9 @@ function loadState() {
         if (typeof parsed.competitionName !== 'string') parsed.competitionName = 'COCA-COLA LEAGUE';
         if (typeof parsed.competitionSubtitle !== 'string') parsed.competitionSubtitle = '';
         if (typeof parsed.preMatchLogo !== 'string') parsed.preMatchLogo = null;
+        if (typeof parsed.expandedAutoHide !== 'boolean') parsed.expandedAutoHide = false;
+        if (typeof parsed.expandedAutoHideSeconds !== 'number') parsed.expandedAutoHideSeconds = 10;
+        if (typeof parsed.scoreboardVisible !== 'boolean') parsed.scoreboardVisible = true;
         return parsed;
       }
     }
@@ -692,6 +699,13 @@ io.on('connection', (socket) => {
     io.emit('state:sync', gameState);
   });
 
+  // ---- SCOREBOARD VISIBILITY TOGGLE ----
+  socket.on('scoreboard:toggle', () => {
+    gameState.scoreboardVisible = !gameState.scoreboardVisible;
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
   // ---- EXPANDED MODE TOGGLE ----
   socket.on('expandedMode:toggle', () => {
     gameState.expandedMode = !gameState.expandedMode;
@@ -702,6 +716,22 @@ io.on('connection', (socket) => {
   // ---- EXPANDED MODE HIDE ----
   socket.on('expandedMode:hide', () => {
     gameState.expandedMode = false;
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  // ---- EXPANDED AUTO-HIDE ----
+  socket.on('expandedAutoHide:set', (data) => {
+    const seconds = Number(data && data.seconds);
+    if (Number.isFinite(seconds) && seconds > 0) {
+      gameState.expandedAutoHideSeconds = Math.min(60, Math.round(seconds));
+    }
+    saveState();
+    io.emit('state:sync', gameState);
+  });
+
+  socket.on('expandedAutoHide:toggle', (on) => {
+    gameState.expandedAutoHide = !!on;
     saveState();
     io.emit('state:sync', gameState);
   });
@@ -792,6 +822,7 @@ io.on('connection', (socket) => {
       playerNickname: playerNickname || scorerName || null,
       playerPhoto: playerPhoto || null,
       playerPosition: player && player.position ? player.position : null,
+      teamLogo: gameState[teamKey].logo || null,
       goalsInMatchAtThisPoint
     });
   });

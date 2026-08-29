@@ -1,275 +1,296 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Painel de Controle - Futsal</title>
-  <link rel="stylesheet" href="control.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle - Futsal</title>
+    <link rel="stylesheet" href="control.css">
 </head>
+
 <body>
-  <div class="container">
-    <header class="header">
-      <h1>Painel de Controle</h1>
-      <div class="connection-status" id="connectionStatus">
-        <span class="status-dot"></span>
-        <span class="status-text">Conectando...</span>
-      </div>
-    </header>
-
-    <main class="panels">
-      <!-- PLACAR -->
-      <section class="panel panel-score">
-        <h2>Placar</h2>
-        <div class="score-controls">
-          <div class="team-controls">
-            <h3 id="teamNameA">Time A</h3>
-            <div class="score-display" id="scoreDisplayA">0</div>
-              <div class="button-group">
-                <button class="btn btn-goal" onclick="updateScore('A', 'increment')">+1 Gol</button>
-              </div>
-          </div>
-          <div class="vs">VS</div>
-          <div class="team-controls">
-            <h3 id="teamNameB">Time B</h3>
-            <div class="score-display" id="scoreDisplayB">0</div>
-              <div class="button-group">
-                <button class="btn btn-goal" onclick="updateScore('B', 'increment')">+1 Gol</button>
-              </div>
-          </div>
-        </div>
-        <button class="btn btn-reset" onclick="toggleScoreboardVisibility()">Ocultar Placar</button>
-        <button class="btn btn-reset" onclick="resetScore()">Resetar Placar</button>
-      </section>
-
-      <!-- EVENTOS -->
-      <section class="panel panel-events">
-        <h2>Eventos</h2>
-        <ul id="eventsList" class="events-list"></ul>
-        <p class="events-empty" id="eventsEmpty">Nenhum gol registrado.</p>
-      </section>
-
-      <!-- CRONÔMETRO -->
-      <section class="panel panel-timer">
-        <h2>Cronômetro</h2>
-        <div class="timer-display" id="timerDisplay">20:00</div>
-        <div class="timer-controls">
-          <button class="btn btn-start" id="btnStartPause" onclick="toggleTimer()">Iniciar</button>
-          <button class="btn btn-reset" onclick="resetTimer()">Zerar</button>
-        </div>
-        <div class="timer-config">
-          <label>
-            Duração do período (minutos):
-            <input type="number" id="timerDuration" value="20" min="1" max="60" onchange="setTimerDuration()">
-          </label>
-        </div>
-        <div class="timer-adjust">
-          <button class="btn btn-adjust" onclick="adjustTimer(-30)">-30s</button>
-          <button class="btn btn-adjust" onclick="adjustTimer(-10)">-10s</button>
-          <button class="btn btn-adjust" onclick="adjustTimer(10)">+10s</button>
-          <button class="btn btn-adjust" onclick="adjustTimer(30)">+30s</button>
-        </div>
-        <button class="btn btn-new-period" onclick="resetForNewPeriod()">Resetar Cronômetro e Faltas para Novo Período</button>
-      </section>
-
-      <!-- FALTAS -->
-      <section class="panel panel-fouls">
-        <h2>Faltas</h2>
-        <div class="fouls-controls">
-          <div class="team-controls">
-            <h3 id="foulsTeamNameA">Time A</h3>
-            <div class="fouls-display" id="foulsDisplayA">0</div>
-            <div class="button-group">
-              <button class="btn btn-foul" onclick="updateFouls('A', 'increment')">+1</button>
-              <button class="btn btn-remove" onclick="updateFouls('A', 'decrement')">-1</button>
+    <div class="container">
+        <header class="header">
+            <h1>Painel de Controle</h1>
+            <div class="connection-status" id="connectionStatus">
+                <span class="status-dot"></span>
+                <span class="status-text">Conectando...</span>
             </div>
-          </div>
-          <div class="team-controls">
-            <h3 id="foulsTeamNameB">Time B</h3>
-            <div class="fouls-display" id="foulsDisplayB">0</div>
-            <div class="button-group">
-              <button class="btn btn-foul" onclick="updateFouls('B', 'increment')">+1</button>
-              <button class="btn btn-remove" onclick="updateFouls('B', 'decrement')">-1</button>
+        </header>
+
+        <main class="panels">
+            <!-- PLACAR -->
+            <section class="panel panel-score">
+                <h2>Placar</h2>
+                <div class="score-controls">
+                    <div class="team-controls">
+                        <h3 id="teamNameA">Time A</h3>
+                        <div class="score-display" id="scoreDisplayA">0</div>
+                        <div class="button-group">
+                            <button class="btn btn-goal" onclick="updateScore('A', 'increment')">+1 Gol</button>
+                        </div>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="team-controls">
+                        <h3 id="teamNameB">Time B</h3>
+                        <div class="score-display" id="scoreDisplayB">0</div>
+                        <div class="button-group">
+                            <button class="btn btn-goal" onclick="updateScore('B', 'increment')">+1 Gol</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-reset" id="btnScoreboard" onclick="toggleScoreboardVisibility()">Ocultar Placar</button>
+                <button class="btn btn-reset" onclick="resetScore()">Resetar Placar</button>
+            </section>
+
+            <!-- EVENTOS -->
+            <section class="panel panel-events">
+                <h2>Eventos</h2>
+                <ul id="eventsList" class="events-list"></ul>
+                <p class="events-empty" id="eventsEmpty">Nenhum gol registrado.</p>
+            </section>
+
+            <!-- CRONÔMETRO -->
+            <section class="panel panel-timer">
+                <h2>Cronômetro</h2>
+                <div class="timer-display" id="timerDisplay">20:00</div>
+                <div class="timer-controls">
+                    <button class="btn btn-start" id="btnStartPause" onclick="toggleTimer()">Iniciar</button>
+                    <button class="btn btn-reset" onclick="resetTimer()">Zerar</button>
+                </div>
+                <div class="timer-config">
+                    <label>
+                        Duração do período (minutos):
+                        <input type="number" id="timerDuration" value="20" min="1" max="60"
+                            onchange="setTimerDuration()">
+                    </label>
+                </div>
+                <div class="timer-adjust">
+                    <button class="btn btn-adjust" onclick="adjustTimer(-30)">-30s</button>
+                    <button class="btn btn-adjust" onclick="adjustTimer(-10)">-10s</button>
+                    <button class="btn btn-adjust" onclick="adjustTimer(10)">+10s</button>
+                    <button class="btn btn-adjust" onclick="adjustTimer(30)">+30s</button>
+                </div>
+                <button class="btn btn-new-period" onclick="resetForNewPeriod()">Resetar Cronômetro e Faltas para Novo
+                    Período</button>
+            </section>
+
+            <!-- FALTAS -->
+            <section class="panel panel-fouls">
+                <h2>Faltas</h2>
+                <div class="fouls-controls">
+                    <div class="team-controls">
+                        <h3 id="foulsTeamNameA">Time A</h3>
+                        <div class="fouls-display" id="foulsDisplayA">0</div>
+                        <div class="button-group">
+                            <button class="btn btn-foul" onclick="updateFouls('A', 'increment')">+1</button>
+                            <button class="btn btn-remove" onclick="updateFouls('A', 'decrement')">-1</button>
+                        </div>
+                    </div>
+                    <div class="team-controls">
+                        <h3 id="foulsTeamNameB">Time B</h3>
+                        <div class="fouls-display" id="foulsDisplayB">0</div>
+                        <div class="button-group">
+                            <button class="btn btn-foul" onclick="updateFouls('B', 'increment')">+1</button>
+                            <button class="btn btn-remove" onclick="updateFouls('B', 'decrement')">-1</button>
+                        </div>
+                    </div>
+                </div>
+                <button class="btn btn-reset" onclick="resetFouls()">Resetar Faltas</button>
+            </section>
+
+            <!-- TIMES -->
+            <section class="panel panel-teams">
+                <h2>Times</h2>
+                <div class="teams-config">
+                    <div class="team-config">
+                        <h3>Time A</h3>
+                        <select id="teamSelectA" onchange="loadTeamFromDB('A', this.value)"
+                            style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a2e; color: #fff; border: 2px solid #0f3460; border-radius: 6px;">
+                            <option value="">-- Selecionar time --</option>
+                        </select>
+                        <div class="team-preview" id="teamPreviewA">
+                            <div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>
+                        </div>
+                    </div>
+                    <div class="team-config">
+                        <h3>Time B</h3>
+                        <select id="teamSelectB" onchange="loadTeamFromDB('B', this.value)"
+                            style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a2e; color: #fff; border: 2px solid #0f3460; border-radius: 6px;">
+                            <option value="">-- Selecionar time --</option>
+                        </select>
+                        <div class="team-preview" id="teamPreviewB">
+                            <div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- LOGO DA COMPETIÇÃO -->
+            <section class="panel panel-competition">
+                <h2>Logo da Competição</h2>
+                <div class="logo-upload">
+                    <label for="competitionLogoInput" class="btn btn-upload">Escolher Logo</label>
+                    <input type="file" id="competitionLogoInput" accept=".png,.jpg,.jpeg,.svg"
+                        onchange="uploadCompetitionLogo()">
+                    <div class="logo-preview" id="competitionLogoPreview"></div>
+                    <button class="btn btn-remove-logo" onclick="removeCompetitionLogo()">Remover</button>
+                </div>
+            </section>
+
+            <!-- PRÉ-JOGO -->
+            <section class="panel panel-pre-match">
+                <h2>Pré-Jogo</h2>
+                <div class="pre-match-controls">
+                    <button class="btn btn-toggle" id="btnPreMatch" onclick="togglePreMatch()">Mostrar Pré-Jogo</button>
+                    <div class="pre-match-fields" style="margin-top: 12px;">
+                        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
+                            Logo do Pré-Jogo:
+                            <input type="file" id="preMatchLogoInput" accept=".png,.jpg,.jpeg,.svg"
+                                onchange="uploadPreMatchLogo()" style="width: 100%; margin-top: 4px;">
+                        </label>
+                        <div class="logo-preview" id="preMatchLogoPreview"></div>
+                        <button class="btn btn-remove-logo" onclick="removePreMatchLogo()"
+                            style="margin-top: 8px;">Remover Logo Pré-Jogo</button>
+                        <label
+                            style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px; margin-top: 12px;">
+                            Nome da Competição:
+                            <input type="text" id="preMatchCompetitionName" value="COCA-COLA LEAGUE" maxlength="50"
+                                style="width: 100%; margin-top: 4px;">
+                        </label>
+                        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
+                            Subtítulo / Edição:
+                            <input type="text" id="preMatchCompetitionSubtitle" value="" maxlength="50"
+                                style="width: 100%; margin-top: 4px;">
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- GERENCIAR TIMES -->
+            <section class="panel panel-teams-db">
+                <h2>Gerenciar Times</h2>
+                <button class="btn btn-goal" onclick="openTeamModal()" style="margin-bottom: 16px;">+ Novo Time</button>
+                <div id="teamsList" class="teams-grid"></div>
+                <p id="teamsEmpty" class="events-empty" style="display:none;">Nenhum time cadastrado.</p>
+            </section>
+
+            <!-- PLACAR EXPANDIDO -->
+            <section class="panel panel-expanded">
+                <h2>Placar Expandido</h2>
+                <p style="font-size: 13px; color: #aaa; margin-bottom: 12px;">Modo completo com escudos e nomes dos
+                    times</p>
+                <button class="btn btn-toggle" id="btnExpandedMode" onclick="toggleExpandedMode()">Mostrar
+                    Expandido</button>
+                <div class="expanded-config">
+                    <label class="expanded-config-row">
+                        <input type="checkbox" id="expandedAutoHideToggle"
+                            onchange="toggleExpandedAutoHide(this.checked)">
+                        Auto-ocultar automaticamente
+                    </label>
+                    <label>
+                        Auto-ocultar após (seg):
+                        <input type="number" id="expandedAutoHideSeconds" value="10" min="3" max="60"
+                            onchange="setExpandedAutoHideSeconds()">
+                    </label>
+                </div>
+            </section>
+
+            <!-- RESET GERAL -->
+            <section class="panel panel-reset">
+                <h2>Reset Geral</h2>
+                <p class="warning-text">Isso irá resetar placar, faltas, cronômetro e remover todos os escudos.</p>
+                <button class="btn btn-danger" onclick="resetAll()">Resetar Tudo</button>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Painel de Controle - Sistema de Overlay Futsal</p>
+        </footer>
+    </div>
+
+    <!-- MODAL DE RECORTE DE IMAGEM -->
+    <div id="cropModal" class="crop-modal hidden">
+        <div class="crop-modal-content">
+            <h2>Ajustar Recorte</h2>
+            <p class="crop-hint">Arraste a imagem para posicionar e use o zoom para ajustar</p>
+            <div class="crop-preview-wrapper">
+                <div class="crop-frame" id="cropFrame">
+                    <canvas id="cropCanvas"></canvas>
+                </div>
+                <span class="crop-size-label" id="cropSizeLabel"></span>
             </div>
-          </div>
+            <div class="crop-controls">
+                <label>
+                    Zoom:
+                    <input type="range" id="cropZoom" min="100" max="400" value="100">
+                </label>
+                <button class="btn btn-crop-reset" onclick="resetCropView()">Resetar</button>
+            </div>
+            <div class="crop-actions">
+                <button class="btn btn-cancel" onclick="closeCropModal()">Cancelar</button>
+                <button class="btn btn-confirm" onclick="confirmCrop()">Confirmar Recorte</button>
+            </div>
         </div>
-        <button class="btn btn-reset" onclick="resetFouls()">Resetar Faltas</button>
-      </section>
-
-      <!-- TIMES -->
-      <section class="panel panel-teams">
-        <h2>Times</h2>
-        <div class="teams-config">
-        <div class="team-config">
-          <h3>Time A</h3>
-          <select id="teamSelectA" onchange="loadTeamFromDB('A', this.value)" style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a2e; color: #fff; border: 2px solid #0f3460; border-radius: 6px;">
-            <option value="">-- Selecionar time --</option>
-          </select>
-          <div class="team-preview" id="teamPreviewA">
-            <div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>
-          </div>
-        </div>
-        <div class="team-config">
-          <h3>Time B</h3>
-          <select id="teamSelectB" onchange="loadTeamFromDB('B', this.value)" style="width: 100%; padding: 8px; margin-bottom: 8px; background: #1a1a2e; color: #fff; border: 2px solid #0f3460; border-radius: 6px;">
-            <option value="">-- Selecionar time --</option>
-          </select>
-          <div class="team-preview" id="teamPreviewB">
-            <div class="team-preview-placeholder">Selecione um time para visualizar os dados</div>
-          </div>
-        </div>
-      </div>
-      </section>
-
-      <!-- LOGO DA COMPETIÇÃO -->
-      <section class="panel panel-competition">
-        <h2>Logo da Competição</h2>
-        <div class="logo-upload">
-          <label for="competitionLogoInput" class="btn btn-upload">Escolher Logo</label>
-          <input type="file" id="competitionLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadCompetitionLogo()">
-          <div class="logo-preview" id="competitionLogoPreview"></div>
-          <button class="btn btn-remove-logo" onclick="removeCompetitionLogo()">Remover</button>
-        </div>
-      </section>
-
-      <!-- PRÉ-JOGO -->
-      <section class="panel panel-pre-match">
-        <h2>Pré-Jogo</h2>
-        <div class="pre-match-controls">
-          <button class="btn btn-toggle" id="btnPreMatch" onclick="togglePreMatch()">Mostrar Pré-Jogo</button>
-          <div class="pre-match-fields" style="margin-top: 12px;">
-            <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
-              Logo do Pré-Jogo:
-              <input type="file" id="preMatchLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadPreMatchLogo()" style="width: 100%; margin-top: 4px;">
-            </label>
-            <div class="logo-preview" id="preMatchLogoPreview"></div>
-            <button class="btn btn-remove-logo" onclick="removePreMatchLogo()" style="margin-top: 8px;">Remover Logo Pré-Jogo</button>
-            <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px; margin-top: 12px;">
-              Nome da Competição:
-              <input type="text" id="preMatchCompetitionName" value="COCA-COLA LEAGUE" maxlength="50" style="width: 100%; margin-top: 4px;">
-            </label>
-            <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
-              Subtítulo / Edição:
-              <input type="text" id="preMatchCompetitionSubtitle" value="" maxlength="50" style="width: 100%; margin-top: 4px;">
-            </label>
-          </div>
-        </div>
-      </section>
-
-      <!-- GERENCIAR TIMES -->
-      <section class="panel panel-teams-db">
-        <h2>Gerenciar Times</h2>
-        <button class="btn btn-goal" onclick="openTeamModal()" style="margin-bottom: 16px;">+ Novo Time</button>
-        <div id="teamsList" class="teams-grid"></div>
-        <p id="teamsEmpty" class="events-empty" style="display:none;">Nenhum time cadastrado.</p>
-      </section>
-
-      <!-- PLACAR EXPANDIDO -->
-      <section class="panel panel-expanded">
-        <h2>Placar Expandido</h2>
-        <p style="font-size: 13px; color: #aaa; margin-bottom: 12px;">Modo completo com escudos e nomes dos times</p>
-        <button class="btn btn-toggle" id="btnExpandedMode" onclick="toggleExpandedMode()">Mostrar Expandido</button>
-        <div class="expanded-config" style="margin-top: 12px;">
-          <label style="font-size: 12px; color: #aaa;">
-            Auto-ocultar após gol (seg):
-            <input type="number" id="expandedAutoHideSeconds" value="10" min="3" max="30" onchange="setExpandedAutoHideSeconds()">
-          </label>
-        </div>
-      </section>
-
-      <!-- RESET GERAL -->
-      <section class="panel panel-reset">
-        <h2>Reset Geral</h2>
-        <p class="warning-text">Isso irá resetar placar, faltas, cronômetro e remover todos os escudos.</p>
-        <button class="btn btn-danger" onclick="resetAll()">Resetar Tudo</button>
-      </section>
-    </main>
-
-    <footer class="footer">
-      <p>Painel de Controle - Sistema de Overlay Futsal</p>
-    </footer>
-  </div>
-
-  <!-- MODAL DE RECORTE DE IMAGEM -->
-  <div id="cropModal" class="crop-modal hidden">
-    <div class="crop-modal-content">
-      <h2>Ajustar Recorte</h2>
-      <p class="crop-hint">Arraste a imagem para posicionar e use o zoom para ajustar</p>
-      <div class="crop-preview-wrapper">
-        <div class="crop-frame" id="cropFrame">
-          <canvas id="cropCanvas"></canvas>
-        </div>
-        <span class="crop-size-label" id="cropSizeLabel"></span>
-      </div>
-      <div class="crop-controls">
-        <label>
-          Zoom:
-          <input type="range" id="cropZoom" min="100" max="400" value="100">
-        </label>
-        <button class="btn btn-crop-reset" onclick="resetCropView()">Resetar</button>
-      </div>
-      <div class="crop-actions">
-        <button class="btn btn-cancel" onclick="closeCropModal()">Cancelar</button>
-        <button class="btn btn-confirm" onclick="confirmCrop()">Confirmar Recorte</button>
-      </div>
     </div>
-  </div>
 
-  <!-- MODAL DE CADASTRO/EDIÇÃO DE TIME -->
-  <div id="teamModal" class="team-modal hidden">
-    <div class="team-modal-content">
-      <h2 id="teamModalTitle">Novo Time</h2>
-      <form id="teamForm" onsubmit="saveTeam(event)">
-        <input type="hidden" id="teamId">
-        <div class="team-form-row">
-          <label>Nome do Time *</label>
-          <input type="text" id="teamName" required maxlength="50">
-        </div>
-        <div class="team-form-row">
-          <label>Sigla (3-4 letras)</label>
-          <input type="text" id="teamAbbr" maxlength="4" style="width: 80px; text-transform: uppercase;">
-        </div>
-        <div class="team-form-row">
-          <label>Escudo do Time</label>
-          <input type="file" id="teamLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadTeamLogo()">
-          <div class="logo-preview" id="teamLogoPreview"></div>
-          <input type="hidden" id="teamLogoData" value="">
-        </div>
-        <div class="team-form-row">
-          <label>Cores do Time</label>
-          <div class="color-picker">
-            <label>Cor Primária:</label>
-            <input type="color" id="teamColorPrimary" value="#000000">
-            <label>Cor Secundária:</label>
-            <input type="color" id="teamColorSecondary" value="#ffffff">
-          </div>
-        </div>
+    <!-- MODAL DE CADASTRO/EDIÇÃO DE TIME -->
+    <div id="teamModal" class="team-modal hidden">
+        <div class="team-modal-content">
+            <h2 id="teamModalTitle">Novo Time</h2>
+            <form id="teamForm" onsubmit="saveTeam(event)">
+                <input type="hidden" id="teamId">
+                <div class="team-form-row">
+                    <label>Nome do Time *</label>
+                    <input type="text" id="teamName" required maxlength="50">
+                </div>
+                <div class="team-form-row">
+                    <label>Sigla (3-4 letras)</label>
+                    <input type="text" id="teamAbbr" maxlength="4" style="width: 80px; text-transform: uppercase;">
+                </div>
+                <div class="team-form-row">
+                    <label>Escudo do Time</label>
+                    <input type="file" id="teamLogoInput" accept=".png,.jpg,.jpeg,.svg" onchange="uploadTeamLogo()">
+                    <div class="logo-preview" id="teamLogoPreview"></div>
+                    <input type="hidden" id="teamLogoData" value="">
+                </div>
+                <div class="team-form-row">
+                    <label>Cores do Time</label>
+                    <div class="color-picker">
+                        <label>Cor Primária:</label>
+                        <input type="color" id="teamColorPrimary" value="#000000">
+                        <label>Cor Secundária:</label>
+                        <input type="color" id="teamColorSecondary" value="#ffffff">
+                    </div>
+                </div>
 
-        <h3 style="margin-top: 20px; margin-bottom: 10px; color: #00cc66;">Escalação (5 jogadores)</h3>
-        <div id="playersList" class="players-list"></div>
-        <button type="button" class="btn-add-player" onclick="addPlayerRow()">+ Adicionar Jogador</button>
+                <h3 style="margin-top: 20px; margin-bottom: 10px; color: #00cc66;">Escalação (5 jogadores)</h3>
+                <div id="playersList" class="players-list"></div>
+                <button type="button" class="btn-add-player" onclick="addPlayerRow()">+ Adicionar Jogador</button>
 
-        <div class="team-modal-actions">
-          <button type="button" class="btn btn-remove" onclick="closeTeamModal()">Cancelar</button>
-          <button type="submit" class="btn btn-goal">Salvar Time</button>
+                <div class="team-modal-actions">
+                    <button type="button" class="btn btn-remove" onclick="closeTeamModal()">Cancelar</button>
+                    <button type="submit" class="btn btn-goal">Salvar Time</button>
+                </div>
+            </form>
         </div>
-      </form>
     </div>
-  </div>
 
-  <!-- Modal de seleção de artilheiro -->
-  <div id="goalScorerModal" class="goal-scorer-modal hidden">
-    <div class="goal-scorer-modal-content">
-      <h3>Quem marcou o gol?</h3>
-      <div class="goal-scorer-options">
-        <div id="goalScorerList" class="goal-scorer-list"></div>
-      </div>
-      <div class="goal-scorer-modal-actions">
-        <button type="button" class="btn btn-remove" onclick="closeGoalScorerModal()">Cancelar</button>
-      </div>
+    <!-- Modal de seleção de artilheiro -->
+    <div id="goalScorerModal" class="goal-scorer-modal hidden">
+        <div class="goal-scorer-modal-content">
+            <h3>Quem marcou o gol?</h3>
+            <div class="goal-scorer-options">
+                <div id="goalScorerList" class="goal-scorer-list"></div>
+            </div>
+            <div class="goal-scorer-modal-actions">
+                <button type="button" class="btn btn-remove" onclick="closeGoalScorerModal()">Cancelar</button>
+            </div>
+        </div>
     </div>
-  </div>
 
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="control.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="control.js"></script>
 </body>
+
 </html>

@@ -7,6 +7,9 @@
 const socket = io();
 
 let previousState = null;
+let goalCardHideTimer = null;
+let goalCardLoadTimer = null;
+let expandedHideTimer = null;
 
 const elements = {
   // Modo compacto
@@ -46,10 +49,12 @@ const elements = {
   preMatchTeamNameB: document.getElementById('preMatchTeamNameB'),
   // Goal card
   goalCard: document.getElementById('goalCard'),
+  goalCardBg: document.getElementById('goalCardBg'),
   goalCardPhoto: document.getElementById('goalCardPhoto'),
-  goalCardName: document.getElementById('goalCardName'),
-  goalCardPosition: document.getElementById('goalCardPosition'),
-  goalCardGoalCount: document.getElementById('goalCardGoalCount'),
+  goalCardCrest: document.getElementById('goalCardCrest'),
+  goalCardNameValue: document.getElementById('goalCardNameValue'),
+  goalCardPositionValue: document.getElementById('goalCardPositionValue'),
+  goalCardGoalCountValue: document.getElementById('goalCardGoalCountValue'),
   goalCardText: document.getElementById('goalCardText'),
   goalCardTeamStripe: document.getElementById('goalCardTeamStripe')
 };
@@ -189,16 +194,19 @@ function updateGoalScorers(state) {
 function showGoalCard(event) {
   
   if (!event.playerNickname) return;
+
+  const photoUrl = event.playerPhoto || 'https://via.placeholder.com/120?text=?';
+
+  // Limpa a foto antiga antes de carregar a nova para evitar "flash" do jogador anterior
+  elements.goalCardPhoto.removeAttribute('src');
+
+  const teamLogo = event.teamLogo || (previousState && event.team === 'A' ? previousState.teamA.logo : previousState && previousState.teamB.logo) || 'https://via.placeholder.com/80?text=?';
+  elements.goalCardCrest.src = teamLogo;
   
-  const teamColor = event.team === 'A' ? (previousState && previousState.teamA.colorPrimary) : (previousState && previousState.teamB.colorPrimary);
+  elements.goalCardText.textContent = 'GOOOOOL!!!';
   
-  elements.goalCardTeamStripe.style.background = teamColor || '#000';
-  elements.goalCardPhoto.src = event.playerPhoto || 'https://via.placeholder.com/56?text=?';
-  
-  elements.goalCardText.textContent = 'GOOOOOL!';
-  
-  document.getElementById('goalCardNameValue').textContent = (event.playerNickname || 'GOL').toUpperCase();
-  document.getElementById('goalCardPositionValue').textContent = event.playerPosition || '';
+  elements.goalCardNameValue.textContent = (event.playerNickname || 'GOL').toUpperCase();
+  elements.goalCardPositionValue.textContent = event.playerPosition || '';
   
   let goalCountText = '';
   if (event.goalsInMatchAtThisPoint > 1) {
@@ -206,21 +214,64 @@ function showGoalCard(event) {
   } else {
     goalCountText = '1';
   }
-  document.getElementById('goalCardGoalCountValue').textContent = goalCountText;
-  
+  elements.goalCardGoalCountValue.textContent = goalCountText;
+
+  // Pré-carrega a foto antes de exibir o card, evitando mostrar a foto do jogador antigo
+  const img = new Image();
+  clearTimeout(goalCardLoadTimer);
+  img.onload = () => {
+    elements.goalCardPhoto.src = photoUrl;
+    revealGoalCard();
+  };
+  img.onerror = () => {
+    elements.goalCardPhoto.src = photoUrl;
+    revealGoalCard();
+  };
+  img.src = photoUrl;
+
+  // Timeout de segurança: mostra o card mesmo se a foto demorar/falhar
+  goalCardLoadTimer = setTimeout(revealGoalCard, 2000);
+}
+
+function revealGoalCard() {
+  const wasHidden = elements.goalCard.classList.contains('hidden') || !elements.goalCard.classList.contains('visible');
+  if (!wasHidden) return; // já exibido (ex.: preload e timeout de segurança)
   elements.goalCard.classList.remove('hidden');
   void elements.goalCard.offsetWidth;
   elements.goalCard.classList.add('visible');
+
+  clearTimeout(goalCardHideTimer);
+  goalCardHideTimer = setTimeout(hideGoalCard, 10000);
+}
+
+function hideGoalCard() {
+  elements.goalCard.classList.remove('visible');
+  setTimeout(() => {
+    elements.goalCard.classList.add('hidden');
+  }, 450);
 }
 
 function updateExpandedMode(state) {
+  let visible = state.scoreboardVisible !== false;
+  if (state.preMatchMode) visible = false;
   if (state.expandedMode) {
     elements.compact.classList.remove('visible');
-    elements.expanded.classList.add('visible');
+    elements.expanded.classList.toggle('visible', visible);
+    scheduleExpandedAutoHide(state);
   } else {
-    elements.compact.classList.add('visible');
+    elements.compact.classList.toggle('visible', visible);
     elements.expanded.classList.remove('visible');
+    clearTimeout(expandedHideTimer);
   }
+}
+
+function scheduleExpandedAutoHide(state) {
+  clearTimeout(expandedHideTimer);
+  if (state.expandedAutoHide !== true) return;
+  const seconds = Number(state.expandedAutoHideSeconds) || 10;
+  expandedHideTimer = setTimeout(() => {
+    socket.emit('expandedMode:hide');
+  }, seconds * 1000);
 }
 
 function renderState(state) {
@@ -239,11 +290,6 @@ function renderState(state) {
   updatePreMatch(state);
   updateExpandedMode(state);
 
-  if (state.preMatchMode) {
-    elements.compact.classList.remove('visible');
-    elements.expanded.classList.remove('visible');
-  }
-
   previousState = JSON.parse(JSON.stringify(state));
 }
 
@@ -261,11 +307,6 @@ socket.on('state:sync', (state) => {
 
 socket.on('goalCard:show', (data) => {
   showGoalCard(data);
-});
-
-socket.on('scoreboard:toggle', () => {
-  elements.compact.classList.toggle('visible');
-  elements.expanded.classList.remove('visible');
 });
 
 socket.on('timer:tick', (data) => {

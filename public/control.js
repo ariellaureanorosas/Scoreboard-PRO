@@ -1,6 +1,6 @@
 /**
  * PAINEL DE CONTROLE - JavaScript
- * 
+ *
  * Gerencia todas as interações do painel e comunica com o servidor
  * via WebSocket para atualizar o overlay em tempo real.
  */
@@ -22,32 +22,34 @@ const elements = {
   scoreDisplayB: document.getElementById('scoreDisplayB'),
   teamNameA: document.getElementById('teamNameA'),
   teamNameB: document.getElementById('teamNameB'),
-  
+
   // Cronômetro
   timerDisplay: document.getElementById('timerDisplay'),
   btnStartPause: document.getElementById('btnStartPause'),
+  btnScoreboard: document.getElementById('btnScoreboard'),
   timerDuration: document.getElementById('timerDuration'),
-  
+
   // Faltas
   foulsDisplayA: document.getElementById('foulsDisplayA'),
   foulsDisplayB: document.getElementById('foulsDisplayB'),
   foulsTeamNameA: document.getElementById('foulsTeamNameA'),
   foulsTeamNameB: document.getElementById('foulsTeamNameB'),
-  
+
   // Times
   teamSelectA: document.getElementById('teamSelectA'),
   teamSelectB: document.getElementById('teamSelectB'),
   teamPreviewA: document.getElementById('teamPreviewA'),
   teamPreviewB: document.getElementById('teamPreviewB'),
-  
+
   // Logo da competição
   competitionLogoInput: document.getElementById('competitionLogoInput'),
   competitionLogoPreview: document.getElementById('competitionLogoPreview'),
-  
+
   // Modo Expandido
   btnExpandedMode: document.getElementById('btnExpandedMode'),
   expandedAutoHideSeconds: document.getElementById('expandedAutoHideSeconds'),
-  
+  expandedAutoHideToggle: document.getElementById('expandedAutoHideToggle'),
+
   // Info do Gol
   goalScorerA: document.getElementById('goalScorerA'),
   goalScorerB: document.getElementById('goalScorerB'),
@@ -84,7 +86,7 @@ const elements = {
   teamColorPrimary: document.getElementById('teamColorPrimary'),
   teamColorSecondary: document.getElementById('teamColorSecondary'),
   playersList: document.getElementById('playersList'),
-  
+
   // Status
   connectionStatus: document.getElementById('connectionStatus')
 };
@@ -106,7 +108,7 @@ function formatTime(seconds) {
  */
 function updateUI(state) {
   currentState = state;
-  
+
   // Placar
   elements.scoreDisplayA.textContent = state.teamA.goals;
   elements.scoreDisplayB.textContent = state.teamB.goals;
@@ -114,17 +116,17 @@ function updateUI(state) {
   // Nomes dos times
   elements.teamNameA.textContent = state.teamA.name;
   elements.teamNameB.textContent = state.teamB.name;
-  
+
   // Faltas
   elements.foulsDisplayA.textContent = state.teamA.fouls;
   elements.foulsDisplayB.textContent = state.teamB.fouls;
   elements.foulsTeamNameA.textContent = state.teamA.name;
   elements.foulsTeamNameB.textContent = state.teamB.name;
-  
+
   // Cronômetro
   elements.timerDisplay.textContent = formatTime(state.timer.remaining);
   elements.timerDuration.value = Math.floor(state.timer.duration / 60);
-  
+
   // Botão Iniciar/Pausar
   if (state.timer.running) {
     elements.btnStartPause.textContent = 'Pausar';
@@ -133,10 +135,19 @@ function updateUI(state) {
     elements.btnStartPause.textContent = 'Iniciar';
     elements.btnStartPause.classList.remove('running');
   }
-  
+
+  // Visibilidade do placar
+  if (state.scoreboardVisible !== false) {
+    elements.btnScoreboard.textContent = 'Ocultar Placar';
+    elements.btnScoreboard.classList.remove('active');
+  } else {
+    elements.btnScoreboard.textContent = 'Mostrar Placar';
+    elements.btnScoreboard.classList.add('active');
+  }
+
   // Logo da competição
   updateCompetitionLogoPreview(state.competitionLogo);
-  
+
   // Modo expandido
   if (state.expandedMode) {
     elements.btnExpandedMode.textContent = 'Ocultar Expandido';
@@ -145,12 +156,13 @@ function updateUI(state) {
     elements.btnExpandedMode.textContent = 'Mostrar Expandido';
     elements.btnExpandedMode.classList.remove('active');
   }
-  
+
   // Pré-Jogo
   updatePreMatch(state);
-  
+
   // Auto-hide seconds
   elements.expandedAutoHideSeconds.value = state.expandedAutoHideSeconds || 10;
+  elements.expandedAutoHideToggle.checked = state.expandedAutoHide === true;
 }
 
 /**
@@ -202,7 +214,7 @@ function updateScore(team, action) {
     openGoalScorerModal(team, players);
   } else {
     socket.emit('goal:scored', { team, scorerName: '' });
-    
+
   }
 }
 
@@ -216,9 +228,9 @@ let goalScorerPlayers = [];
 function openGoalScorerModal(team, players) {
   goalScorerTeam = team;
   goalScorerPlayers = players;
-  
+
   const currentMinute = currentState ? formatTime(currentState.timer.remaining) : '';
-  
+
   renderGoalScorerList();
   elements.goalScorerModal.classList.remove('hidden');
 }
@@ -231,7 +243,7 @@ function closeGoalScorerModal() {
 
 function renderGoalScorerList() {
   elements.goalScorerList.innerHTML = '';
-  
+
   const noScorerBtn = document.createElement('button');
   noScorerBtn.className = 'goal-scorer-option';
   noScorerBtn.textContent = 'Sem artilheiro definido';
@@ -240,11 +252,11 @@ function renderGoalScorerList() {
       team: goalScorerTeam,
       scorerName: '',
     });
-    
+
     closeGoalScorerModal();
   };
   elements.goalScorerList.appendChild(noScorerBtn);
-  
+
   const ownGoalBtn = document.createElement('button');
   ownGoalBtn.className = 'goal-scorer-option';
   ownGoalBtn.textContent = 'Gol contra';
@@ -254,37 +266,37 @@ function renderGoalScorerList() {
       scorerName: '',
       type: 'own'
     });
-    
+
     closeGoalScorerModal();
   };
   elements.goalScorerList.appendChild(ownGoalBtn);
-  
+
   goalScorerPlayers.forEach(player => {
     const btn = document.createElement('button');
     btn.className = 'goal-scorer-option goal-scorer-player';
-    
+
     const img = document.createElement('img');
     img.src = player.photo || 'https://via.placeholder.com/40?text=?';
     img.alt = player.nickname || player.name;
     img.className = 'goal-scorer-photo';
     img.onerror = () => { img.src = 'https://via.placeholder.com/40?text=?'; };
-    
+
     const info = document.createElement('div');
     info.className = 'goal-scorer-info';
-    
+
     const nickname = document.createElement('div');
     nickname.className = 'goal-scorer-nickname';
     nickname.textContent = player.nickname || player.name || 'Sem nome';
-    
+
     const position = document.createElement('div');
     position.className = 'goal-scorer-position';
     position.textContent = player.position || '';
-    
+
     info.appendChild(nickname);
     info.appendChild(position);
     btn.appendChild(img);
     btn.appendChild(info);
-    
+
     btn.onclick = () => {
       socket.emit('goal:scored', {
         team: goalScorerTeam,
@@ -292,10 +304,10 @@ function renderGoalScorerList() {
         playerNickname: player.nickname || player.name,
         playerPhoto: player.photo || null,
       });
-      
+
       closeGoalScorerModal();
     };
-    
+
     elements.goalScorerList.appendChild(btn);
   });
 }
@@ -320,19 +332,19 @@ function renderEvents(state) {
 
     const name = document.createElement('span');
     name.className = 'event-name';
-    
+
     let displayName = ev.playerNickname || ev.name || '';
     if (!displayName && ev.playerId) {
       const player = teamState && teamState.players ? teamState.players.find(p => p.id === ev.playerId) : null;
       displayName = player ? (player.nickname || player.name) : 'Gol';
     }
     if (!displayName) displayName = 'Gol';
-    
+
     let suffix = '';
     if (ev.minute) suffix += ` ${ev.minute}'`;
     if (ev.type && ev.type !== 'normal') suffix += ` (${ev.type === 'penalty' ? 'P' : ev.type === 'own' ? 'GC' : ev.type.toUpperCase()})`;
     if (ev.goalsInMatchAtThisPoint > 1) suffix += ` (${ev.goalsInMatchAtThisPoint})`;
-    
+
     name.textContent = displayName.toUpperCase() + suffix;
 
     const btn = document.createElement('button');
@@ -492,6 +504,17 @@ function resetFouls() {
  */
 function toggleExpandedMode() {
   socket.emit('expandedMode:toggle');
+}
+
+function setExpandedAutoHideSeconds() {
+  const seconds = parseInt(elements.expandedAutoHideSeconds.value, 10);
+  if (seconds > 0) {
+    socket.emit('expandedAutoHide:set', { seconds });
+  }
+}
+
+function toggleExpandedAutoHide(checked) {
+  socket.emit('expandedAutoHide:toggle', checked);
 }
 
 /**
@@ -858,7 +881,7 @@ socket.on('connect', () => {
   elements.connectionStatus.classList.add('connected');
   elements.connectionStatus.classList.remove('error');
   elements.connectionStatus.querySelector('.status-text').textContent = 'Conectado';
-  
+
   // Solicita estado inicial
   socket.emit('getInitialState');
 });
@@ -892,7 +915,7 @@ socket.on('timer:tick', (data) => {
     currentState.timer.remaining = data.remaining;
     currentState.timer.running = data.running;
     elements.timerDisplay.textContent = formatTime(data.remaining);
-    
+
     if (data.running) {
       elements.btnStartPause.textContent = 'Pausar';
       elements.btnStartPause.classList.add('running');
@@ -1375,7 +1398,7 @@ function loadTeamFromDB(side, teamId) {
       socket.emit('team:abbreviation', { team: side, abbreviation: team.abbreviation });
       socket.emit('team:colors', { team: side, colorPrimary: team.colorPrimary || '#000000', colorSecondary: team.colorSecondary || '#ffffff' });
       socket.emit('team:logo', { team: side, logo: team.logo || null });
-      
+
       const players = (team.players || []).map(p => ({ ...p, goalsInMatch: 0 }));
       socket.emit('team:players', { team: side, players });
     })

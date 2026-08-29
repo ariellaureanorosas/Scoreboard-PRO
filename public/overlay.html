@@ -74,21 +74,27 @@
 
       <!-- Goal Card -->
       <div id="goalCard" class="goal-card hidden">
-        <div class="goal-card-team-stripe" id="goalCardTeamStripe"></div>
-        <div class="goal-card-content">
-          <img id="goalCardPhoto" src="" alt="" class="goal-card-photo">
-          <div class="goal-card-info">
-            <div id="goalCardText" class="goal-card-text"></div>
-            <div id="goalCardName" class="goal-card-name">
+        <div class="goal-card-bg" id="goalCardBg"></div>
+        <img id="goalCardCrest" src="" alt="" class="goal-card-crest">
+        <img id="goalCardPhoto" src="" alt="" class="goal-card-photo">
+        <div class="goal-card-info">
+          <div class="goal-card-chevron">
+            <svg viewBox="0 0 10 16">
+              <polyline points="2,1 8,8 2,15" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+          </div>
+          <div class="goal-card-body">
+            <div id="goalCardText" class="goal-card-text">GOOOOOL!!!</div>
+            <div class="goal-card-row">
               <span class="goal-card-label">Nome:</span>
               <span id="goalCardNameValue" class="goal-card-value"></span>
             </div>
-            <div id="goalCardPosition" class="goal-card-position">
+            <div class="goal-card-row">
               <span class="goal-card-label">Posição:</span>
               <span id="goalCardPositionValue" class="goal-card-value"></span>
             </div>
-            <div id="goalCardGoalCount" class="goal-card-goal-count">
-              <span class="goal-card-label">Quantidade de gols:</span>
+            <div class="goal-card-row">
+              <span class="goal-card-label">Gols na partida:</span>
               <span id="goalCardGoalCountValue" class="goal-card-value"></span>
             </div>
           </div>

@@ -7,6 +7,10 @@ Sistema completo de overlay de placar de futsal para uso com OBS Studio, control
 - **Dois modos de exibição**
   - **Barra compacta** (estilo Champions League): badge da competição, cronômetro, traves de cor dos times e placar com siglas
   - **Placar expandido**: nomes completos, escudos, placar central em destaque e barra de faltas
+- **Modo pré-jogo** — telão centralizado com escudos, nomes dos times e logo/subtítulo da competição
+- **Card de gol animado** — foto do jogador pré-carregada (sem flash da foto anterior), nome, posição e gols na partida, com fade de entrada/saída e auto-hide configurável (padrão 10s)
+- **Ocultar/mostrar placar** — botão que alterna a visibilidade do placar, com o estado persistido e sincronizado, e o botão do painel refletindo se o placar está ativo ou não
+- **Auto-hide do placar expandido** — ative para o placar expandido se ocultar automaticamente após um tempo configurável (padrão 10s)
 - **Animações de entrada e saída** — slide + fade suaves na troca entre modos, com as faltas entrando em sequência
 - **Editor de recorte de imagens** — ao enviar um escudo ou logo, recorte no tamanho real usado pelo overlay (com pré-visualização circular para escudos)
 - **Controle de faltas com bolinhas** — 5 bolinhas por time + contador de faltas diretas (DLP) que persiste entre períodos
@@ -24,8 +28,8 @@ Sistema completo de overlay de placar de futsal para uso com OBS Studio, control
 
 1. Clone o repositório:
 ```bash
-git clone https://github.com/SEU-USUARIO/futsal-overlay.git
-cd futsal-overlay
+git clone https://github.com/ariellaureanorosas/Scoreboard-PRO.git
+cd Scoreboard-PRO
 ```
 
 2. Instale as dependências:
@@ -77,14 +81,14 @@ http://localhost:3000/control.html
 
 O painel permite:
 
-- **Placar:** adicionar/remover gols para cada time
+- **Placar:** adicionar/remover gols para cada time e ocultar/mostrar o placar no overlay
 - **Cronômetro:** iniciar, pausar, zerar e ajustar tempo
 - **Faltas:** contabilizar faltas por time, com reset por período e acúmulo de faltas diretas (DLP)
 - **Times:** editar nomes, siglas, cores e fazer upload de escudos com editor de recorte
 - **Logo da competição:** upload com recorte no tamanho real do badge
-- **Período:** selecionar 1º Tempo, 2º Tempo, Prorrogação ou Pênaltis
-- **Posição:** configurar overlay no topo ou base da tela
-- **Modo expandido:** alternar manualmente ou exibir automaticamente após cada gol (com auto-hide)
+- **Modo pré-jogo:** telão com escudos, nomes dos times e dados da competição
+- **Modo expandido:** alternar manualmente ou ocultar automaticamente após um tempo configurável (3–60s)
+- **Eventos:** lista dos gols registrados com opção de remoção
 
 ### Acesso via Celular
 
@@ -102,6 +106,7 @@ futsal-overlay/
 ├── server.js           # Servidor Express + Socket.io
 ├── package.json        # Dependências do projeto
 ├── state.json          # Estado atual do jogo (auto-gerado, não versionado)
+├── teams-database.json # Banco de times/jogadores cadastrados
 ├── public/
 │   ├── overlay.html    # Overlay para o OBS
 │   ├── overlay.css     # Estilos do overlay
@@ -110,7 +115,8 @@ futsal-overlay/
 │   ├── control.css     # Estilos do painel
 │   ├── control.js      # Lógica do painel
 │   └── assets/
-│       └── logos/      # Escudos enviados (não versionado)
+│       ├── logos/      # Escudos e logos enviados (não versionado)
+│       └── players/    # Fotos dos jogadores (não versionado)
 └── README.md           # Este arquivo
 ```
 
@@ -129,7 +135,7 @@ Edite as variáveis CSS no topo do arquivo `public/overlay.css`:
 
   --font-main: 'Barlow Condensed', 'Oswald', 'Impact', sans-serif;
 
-  --bar-height: 58px;            /* Altura da barra compacta */
+  --bar-height: 44px;            /* Altura da barra compacta */
   --badge-width: 48px;
   --clock-width: 108px;
   --color-bar-width: 11px;
@@ -149,6 +155,7 @@ O overlay usa as fontes **Barlow Condensed** e **Oswald** do Google Fonts. Para 
 - Verifique se o servidor está rodando
 - Teste a URL `http://localhost:3000/overlay.html` no navegador
 - Clique em "Refresh" no Browser Source do OBS
+- Verifique se o botão "Ocultar Placar" não está ativo no painel (placar oculto)
 
 ### Estado não sincroniza
 - Verifique se ambas as páginas estão conectadas (indicador verde no painel)

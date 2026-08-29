@@ -798,6 +798,60 @@ function confirmCrop() {
 }
 
 // Interação com o canvas: arrastar para mover
+// ========================
+// LAYOUT MASONRY (cards por coluna)
+// ========================
+
+let masonryRAF = null;
+
+function layoutMasonry() {
+  const container = document.querySelector('.panels');
+  if (!container) return;
+  const cards = Array.from(container.querySelectorAll(':scope > .panel'));
+  if (!cards.length) return;
+
+  const gap = 12;
+  const containerWidth = container.clientWidth;
+
+  // Número de colunas responsivo
+  const cardMin = 260;
+  const cols = Math.max(1, Math.floor((containerWidth + gap) / (cardMin + gap)));
+
+  const colWidth = (containerWidth - (cols - 1) * gap) / cols;
+  const colHeights = new Array(cols).fill(0);
+
+  cards.forEach((card) => {
+    card.style.width = colWidth + 'px';
+    let minIndex = 0;
+    for (let i = 1; i < cols; i++) {
+      if (colHeights[i] < colHeights[minIndex]) minIndex = i;
+    }
+    card.style.left = (minIndex * (colWidth + gap)) + 'px';
+    card.style.top = colHeights[minIndex] + 'px';
+    colHeights[minIndex] += card.offsetHeight + gap;
+  });
+
+  container.style.height = (Math.max(...colHeights) - gap) + 'px';
+}
+
+function requestMasonry() {
+  if (masonryRAF) return;
+  masonryRAF = requestAnimationFrame(() => {
+    masonryRAF = null;
+    layoutMasonry();
+  });
+}
+
+function initMasonry() {
+  layoutMasonry();
+  window.addEventListener('resize', requestMasonry);
+  const container = document.querySelector('.panels');
+  if (container && typeof ResizeObserver !== 'undefined') {
+    const ro = new ResizeObserver(requestMasonry);
+    Array.from(container.querySelectorAll(':scope > .panel')).forEach((c) => ro.observe(c));
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const canvas = document.getElementById('cropCanvas');
   const zoomSlider = document.getElementById('cropZoom');
@@ -835,6 +889,8 @@ document.addEventListener('DOMContentLoaded', () => {
   zoomSlider.addEventListener('input', () => {
     applyZoom(parseInt(zoomSlider.value));
   });
+
+  initMasonry();
 });
 
 function applyZoom(zoomPercent) {

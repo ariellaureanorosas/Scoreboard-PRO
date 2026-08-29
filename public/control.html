@@ -43,6 +43,27 @@
                 <button class="btn btn-reset" onclick="resetScore()">Resetar Placar</button>
             </section>
 
+            <!-- PLACAR EXPANDIDO -->
+            <section class="panel panel-expanded">
+                <h2>Placar Expandido</h2>
+                <p style="font-size: 12px; color: #aaa; margin-bottom: 8px;">Modo completo com escudos e nomes dos
+                    times</p>
+                <button class="btn btn-toggle" id="btnExpandedMode" onclick="toggleExpandedMode()">Mostrar
+                    Expandido</button>
+                <div class="expanded-config">
+                    <label class="expanded-config-row">
+                        <input type="checkbox" id="expandedAutoHideToggle"
+                            onchange="toggleExpandedAutoHide(this.checked)">
+                        Auto-ocultar automaticamente
+                    </label>
+                    <label>
+                        Auto-ocultar após (seg):
+                        <input type="number" id="expandedAutoHideSeconds" value="10" min="3" max="60"
+                            onchange="setExpandedAutoHideSeconds()">
+                    </label>
+                </div>
+            </section>
+
             <!-- EVENTOS -->
             <section class="panel panel-events">
                 <h2>Eventos</h2>
@@ -138,62 +159,12 @@
                 </div>
             </section>
 
-            <!-- PRÉ-JOGO -->
-            <section class="panel panel-pre-match">
-                <h2>Pré-Jogo</h2>
-                <div class="pre-match-controls">
-                    <button class="btn btn-toggle" id="btnPreMatch" onclick="togglePreMatch()">Mostrar Pré-Jogo</button>
-                    <div class="pre-match-fields" style="margin-top: 12px;">
-                        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
-                            Logo do Pré-Jogo:
-                            <input type="file" id="preMatchLogoInput" accept=".png,.jpg,.jpeg,.svg"
-                                onchange="uploadPreMatchLogo()" style="width: 100%; margin-top: 4px;">
-                        </label>
-                        <div class="logo-preview" id="preMatchLogoPreview"></div>
-                        <button class="btn btn-remove-logo" onclick="removePreMatchLogo()"
-                            style="margin-top: 8px;">Remover Logo Pré-Jogo</button>
-                        <label
-                            style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px; margin-top: 12px;">
-                            Nome da Competição:
-                            <input type="text" id="preMatchCompetitionName" value="COCA-COLA LEAGUE" maxlength="50"
-                                style="width: 100%; margin-top: 4px;">
-                        </label>
-                        <label style="font-size: 12px; color: #aaa; display: block; margin-bottom: 8px;">
-                            Subtítulo / Edição:
-                            <input type="text" id="preMatchCompetitionSubtitle" value="" maxlength="50"
-                                style="width: 100%; margin-top: 4px;">
-                        </label>
-                    </div>
-                </div>
-            </section>
-
             <!-- GERENCIAR TIMES -->
             <section class="panel panel-teams-db">
                 <h2>Gerenciar Times</h2>
-                <button class="btn btn-goal" onclick="openTeamModal()" style="margin-bottom: 16px;">+ Novo Time</button>
+                <button class="btn btn-goal" onclick="openTeamModal()" style="margin-bottom: 10px;">+ Novo Time</button>
                 <div id="teamsList" class="teams-grid"></div>
                 <p id="teamsEmpty" class="events-empty" style="display:none;">Nenhum time cadastrado.</p>
-            </section>
-
-            <!-- PLACAR EXPANDIDO -->
-            <section class="panel panel-expanded">
-                <h2>Placar Expandido</h2>
-                <p style="font-size: 13px; color: #aaa; margin-bottom: 12px;">Modo completo com escudos e nomes dos
-                    times</p>
-                <button class="btn btn-toggle" id="btnExpandedMode" onclick="toggleExpandedMode()">Mostrar
-                    Expandido</button>
-                <div class="expanded-config">
-                    <label class="expanded-config-row">
-                        <input type="checkbox" id="expandedAutoHideToggle"
-                            onchange="toggleExpandedAutoHide(this.checked)">
-                        Auto-ocultar automaticamente
-                    </label>
-                    <label>
-                        Auto-ocultar após (seg):
-                        <input type="number" id="expandedAutoHideSeconds" value="10" min="3" max="60"
-                            onchange="setExpandedAutoHideSeconds()">
-                    </label>
-                </div>
             </section>
 
             <!-- RESET GERAL -->
@@ -201,6 +172,35 @@
                 <h2>Reset Geral</h2>
                 <p class="warning-text">Isso irá resetar placar, faltas, cronômetro e remover todos os escudos.</p>
                 <button class="btn btn-danger" onclick="resetAll()">Resetar Tudo</button>
+            </section>
+
+            <!-- PRÉ-JOGO -->
+            <section class="panel panel-pre-match">
+                <h2>Pré-Jogo</h2>
+                <div class="pre-match-controls">
+                    <button class="btn btn-toggle" id="btnPreMatch" onclick="togglePreMatch()">Mostrar Pré-Jogo</button>
+                    <div class="pre-match-fields" style="margin-top: 8px;">
+                        <label style="font-size: 11px; color: #aaa; display: block; margin-bottom: 4px;">
+                            Logo do Pré-Jogo:
+                            <input type="file" id="preMatchLogoInput" accept=".png,.jpg,.jpeg,.svg"
+                                onchange="uploadPreMatchLogo()" style="width: 100%; margin-top: 3px;">
+                        </label>
+                        <div class="logo-preview" id="preMatchLogoPreview"></div>
+                        <button class="btn btn-remove-logo" onclick="removePreMatchLogo()"
+                            style="margin-top: 6px;">Remover Logo Pré-Jogo</button>
+                        <label
+                            style="font-size: 11px; color: #aaa; display: block; margin-bottom: 4px; margin-top: 8px;">
+                            Nome da Competição:
+                            <input type="text" id="preMatchCompetitionName" value="COCA-COLA LEAGUE" maxlength="50"
+                                style="width: 100%; margin-top: 3px;">
+                        </label>
+                        <label style="font-size: 11px; color: #aaa; display: block; margin-bottom: 4px;">
+                            Subtítulo / Edição:
+                            <input type="text" id="preMatchCompetitionSubtitle" value="" maxlength="50"
+                                style="width: 100%; margin-top: 3px;">
+                        </label>
+                    </div>
+                </div>
             </section>
         </main>
 

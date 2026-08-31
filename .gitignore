@@ -6,6 +6,9 @@ node_modules/
 .env
 *.log
 
+# Dados pessoais de times/jogadores
+teams-database.json
+
 # OpenCode temp files
 *.py
 .patch*.patch
